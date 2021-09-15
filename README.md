@@ -6,9 +6,11 @@
 
 2. Before running the catkin_make_isolated --install line, copy the hidden .uwsim folder (found at the address catkin_ws / src / usv_sim_lsa) to your home folder and to the uwsim_resources folder (found at the address catkin_ws / src / usv_sim_lsa). The UWSIM package may take a long time to install, so please be patient.
 
+3. Download this repository and open it.
+
 3. Copy the Sailboat.sh script, from the Initial_scripts folder, in your personal folder.
 
-4. Run the Sailboat.sh script and immediately run the following two lines: roslaunch usv_sim sailboat_scenariox.launch parse: = true, roslaunch usv_sim sailboat_scenariox.launch parse: = false, where x is the scenario you want to run. This will open the default simulation of scenario x with the generic USVSIM sailboat.
+4. Open a terminal, run the Sailboat.sh script and immediately run the following two commands: roslaunch usv_sim sailboat_scenariox.launch parse: = true, roslaunch usv_sim sailboat_scenariox.launch parse: = false, where x is the scenario you want to run. This will open the default simulation of scenario x with the generic USVSIM sailboat.
 
 ## Modified USVSIM sailboat simulator.
 
