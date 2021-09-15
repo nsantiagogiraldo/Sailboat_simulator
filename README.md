@@ -24,7 +24,7 @@ To view the modified sailboat in its first version, perform the following steps:
 
 4. Execute the two normal opening commands for a simulation scenario (point 4 of the installation)
 
-### If you want to modify the model of the sailboat:
+### If you want to modify the sailboat model:
 
 1. Modify the sailboat.xacro, boat_subdivided4.xacro, sail.dae and box.dae files found inside the catkin_ws / src / usv_sim_lsa folder
 
