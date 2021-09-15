@@ -1,8 +1,8 @@
 # Sailboat_simulator
 
-##Modified USVSIM sailboat simulator.
+## Modified USVSIM sailboat simulator.
 
-###Simulator installation:
+### Simulator installation:
 
 1. Install USVSIM simulator, full instructions and requirements are on the page https://github.com/disaster-robotics-proalertas/usv_sim_lsa.
 
@@ -12,7 +12,7 @@
 
 4. Run the Sailboat.sh script and immediately run the following two lines: roslaunch usv_sim sailboat_scenariox.launch parse: = true, roslaunch usv_sim sailboat_scenariox.launch parse: = false, where x is the scenario you want to run. This will open the default simulation of scenario x with the generic USVSIM sailboat.
 
-###Modified simulator (after USVSIM is installed)
+### Modified simulator (after USVSIM is installed)
 
 To view the modified sailboat in its first version, perform the following steps:
 
@@ -24,19 +24,19 @@ To view the modified sailboat in its first version, perform the following steps:
 
 4. Execute the two normal opening commands for a simulation scenario (point 4 of the installation)
 
-###If you want to modify the model of the sailboat:
+### If you want to modify the model of the sailboat:
 
 1. Modify the sailboat.xacro, boat_subdivided4.xacro, sail.dae and box.dae files found inside the catkin_ws / src / usv_sim_lsa folder
 
 2. Execute all the steps from point 2 of the previous section.
 
-###If you want to modify a scenario:
+### If you want to modify a scenario:
 
 1. Modify the files patrol_pid_scenex.py and sailboat_scenariox.xml, where x is the number of the scenario you want to modify
 
 2. Execute all the steps from point 2 of the previous section.
 
-###If you want to modify the sailboat controller:
+### If you want to modify the sailboat controller:
 
 1. Modify the sailboat_control_heading.py file
 
