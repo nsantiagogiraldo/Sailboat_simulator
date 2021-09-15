@@ -1,8 +1,6 @@
-# Sailboat_simulator
+# USVSIM sailboat simulator
 
-## Modified USVSIM sailboat simulator.
-
-### Simulator installation:
+## Simulator installation:
 
 1. Install USVSIM simulator, full instructions and requirements are on the page https://github.com/disaster-robotics-proalertas/usv_sim_lsa.
 
@@ -12,7 +10,7 @@
 
 4. Run the Sailboat.sh script and immediately run the following two lines: roslaunch usv_sim sailboat_scenariox.launch parse: = true, roslaunch usv_sim sailboat_scenariox.launch parse: = false, where x is the scenario you want to run. This will open the default simulation of scenario x with the generic USVSIM sailboat.
 
-### Modified simulator (after USVSIM is installed)
+## Modified USVSIM sailboat simulator.
 
 To view the modified sailboat in its first version, perform the following steps:
 
