@@ -1,0 +1,32 @@
+heading_control (usv_base_ctrl/sailboat_control_heading.py) General
+
+Escenario 1:
+
+patrol (usv_navigation/patrol_pid_scene1.py)
+pid_control (freefloating_gazebo/pid_control)
+
+Escenario 2:
+    
+patrol (usv_navigation/patrol_pid_scene2.py)
+pid_control (freefloating_gazebo/pid_control)
+
+Escenario 3:
+
+patrol (usv_navigation/patrol_pid_scene3.py)
+pid_control (freefloating_gazebo/pid_control)
+
+Perturbaciones del sistema: 
+
+archivo: sailboat_scenariox.xml
+
+Modelo del barco: 
+
+sailboat.xacro
+boat_subdivided4.xacro
+sail.dae
+box.dae
+
+
+Velero:  Huracan
+
+
