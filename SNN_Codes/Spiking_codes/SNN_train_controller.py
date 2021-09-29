@@ -113,8 +113,7 @@ while True:
                 r = env.reward(rew,1,limit = 1) #recompensa tipo 1
                 #r = env.reward(dato,2,limit = 1)
             n_dato = n_dato+list(max_freq*env.np.ones(len(n_dato)))
-            net.reset_state_variables()
-            print(r)
+            print(n_dato[])
             #cod_n_dato = SNN.codificacion_red('bernoulli',1,dt,n_dato)
             #net.run(inputs={capas[0] : cod_n_dato}, time=1, reward=-1)
             cod_n_dato = SNN.codificacion_red(codify,time_network,dt,n_dato)

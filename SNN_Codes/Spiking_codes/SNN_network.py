@@ -250,6 +250,7 @@ def decode_spikes(monitor, spikes, Act_M, Act_m, err_dist):
     for i in range(len(h)):
         a = normalize(data=[h[i]], vmax=[spikes[0]-5], vmin=[spikes[1]+5], A=Act_M[i], B=Act_m[i])
         actions = actions+a
+        
     actions.append(0)
     if actions[1]>0:
         actions[1]=90
