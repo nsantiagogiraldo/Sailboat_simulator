@@ -1,30 +1,30 @@
 import torch
 import bindsnet.analysis.plotting as plt
-import numpy as np
 import bindsnet.network.nodes as nodes
-from bindsnet.network import Network #Permite crear un nuevo objeto de la clase red
+from bindsnet.network.network import Network #Permite crear un nuevo objeto de la clase red
 from bindsnet.learning import MSTDP
 import bindsnet.encoding.encodings as codify
 from bindsnet.network.topology import Connection
 from bindsnet.network.monitors import Monitor
+from bindsnet.network.network import load
 
-def max_min_spikes(neuronas, dt, time, recurrent, modelo, wM, wm, n):
+def max_min_spikes(neuronas, dt, time, recurrent, modelo, wM, wm, n, codify, maximum, minimun):
     data=[]
     data1=[]
     [capas,monitores,net,m_pesos] = arquitectura_red(neuronas,dt,time,recurrent,modelo,wM,wm,n,ones=True)
     for i in range(neuronas[0]):
-        data.append(1)
-        data1.append(0)
+        data.append(maximum)
+        data1.append(minimun)
     #data[0]=0
     #data[1]=0
     #data[2]=0
     #data[3]=0
-    # data1[0]=1
-    # data1[1]=1
-    # data1[2]=1
-    # data1[3]=1
-    dato = codificacion_red('bernoulli',time,dt,data)
-    dato2 = codificacion_red('bernoulli',time,dt,data1)
+    #data1[0]=1
+    #data1[1]=1
+    #data1[2]=1
+    #data1[3]=1
+    dato = codificacion_red(codify,time,dt,data)
+    dato2 = codificacion_red(codify,time,dt,data1)
     net.run(inputs={capas[0] : dato}, time=time,reward=0)
     imprimir_spikes(monitores,time,None,None)
     h=monitores[len(capas)-1].get("s")
@@ -48,28 +48,57 @@ def imprimir_pesos(weigths, wmax, wmin, im):
     _weigths={}
     for i, l in enumerate(weigths):
         _weigths[i] = weigths[l].get("w")
-    weigths_ims = plt.plot_weights(_weigths[0][0],im=im,wmin=wmin,wmax=wmax)
+    weigths_ims = plt.plot_weights(_weigths[1][1],im=im,wmin=wmin,wmax=wmax)
     plt.plt.show()
     return weigths_ims
     
-def guardar_red(name, network, direction):
+def guardar_red(name, network, direction, max_sp, min_sp, arq):
     j=True
     try:
         network.save(direction+'/'+name)
+        arq_str = str(arq)
+        f = open('network_connection.txt', 'w')
+        f.write(str(max_sp)+'\n'+str(min_sp)+'\n'+arq_str[1:len(arq_str)-1])
+        f.close()
     except:
         j=False
         
     return j
 
-def cargar_red(name, direction):
-    j=True
+def cargar_red(name, direction, learning):
+    spike_monitors={}
+    weight_monitors={}
+    wc=0
+    sc=0
+    arq=[]
     try:
         network = Network() 
-        network.load(direction+'/'+name)
-    except:
-        j=False
+        network = load(direction+'/'+name,learning=learning)
+        monitors=network.monitors;
+        for i in monitors:
+            if i[0]=='S':
+                spike_monitors[sc]=monitors[i]
+                sc+=1
+            else:
+                weight_monitors[wc]=monitors[i]
+                wc+=1
+        capas = list(network.layers.keys())
+                
+        f = open('network_connection.txt', 'r')
+        info = f.read().split('\n')
+        max_spikes = int(info[0])
+        min_spikes = int(info[1])
+        for i in info[2].split(','):
+            arq.append(int(i))
         
-    return j,network
+        # for i in range(k):
+        #     M_weigths[i] = Monitor(k[i], state_vars='w')
+        # k=network.
+
+    except:
+        print("Error loading")
+        
+    return capas,spike_monitors,network,weight_monitors, max_spikes, min_spikes, arq
 
 def codificacion_red(code, time_network, dt, dato):
     dato=torch.Tensor(dato)
@@ -122,7 +151,7 @@ def arquitectura_red(neuronas, dt, time, recurrent, modelo, wM, wm, n, ones=Fals
                     #w=0.05 + 0.1 * torch.randn(neur[i-1].n, neur[i].n)
                     #norm=0.5 * neur[i-1].n,
                 )
-            else:
+            elif i!=1:
                 connect[i-1] = Connection(
                     source=neur[i-1],
                     target=neur[i],
@@ -131,6 +160,18 @@ def arquitectura_red(neuronas, dt, time, recurrent, modelo, wM, wm, n, ones=Fals
                     update_rule=MSTDP,
                     nu=n,
                     w=(wM-wm)*torch.randn(neur[i-1].n, neur[i].n)+wm,
+                    #w=0.05 + 0.1 * torch.randn(neur[i-1].n, neur[i].n)
+                    #norm=0.5 * neur[i-1].n,
+                )
+            else:
+                connect[i-1] = Connection(
+                    source=neur[i-1],
+                    target=neur[i],
+                    wmin=wm,
+                    wmax=wM,
+                    #update_rule=MSTDP,
+                    #nu=n,
+                    #w=(wM-wm)*torch.randn(neur[i-1].n, neur[i].n)+wm,
                     #w=0.05 + 0.1 * torch.randn(neur[i-1].n, neur[i].n)
                     #norm=0.5 * neur[i-1].n,
                 )
@@ -188,17 +229,6 @@ def tipo_neurona(modelo,neuronas):
         
         return neur
     
-def reward(data,tipo,limit):
-
-    if tipo==1:
-        l=[]
-        v1=[]
-        v2=[]
-        l.append(data[0]-data[1])
-        v1.append(limit)
-        v2.append(-limit)
-        r = normalize(data=l, vmax=v1, vmin=v2, A=1 ,B=-1)
-    return r[0]
 
 def normalize(data,vmax,vmin, A=1, B=0):
     fn=[]
@@ -212,33 +242,23 @@ def normalize(data,vmax,vmin, A=1, B=0):
             fn.append(k);
     return fn
 
-def control_inputs(data,vmax,vmin):
-    l=[]
-    err_dist=np.sqrt((data[1]-data[3])**2+(data[2]-data[4])**2)
-    err_ang=np.arctan2(data[4]-data[2],data[3]-data[1])-data[7]
-    l.append(err_ang)
-    l.append(data[5])
-    l.append(data[6])
-    l.append(data[8])
-    
-    l=normalize(l, vmax, vmin, 1, 0.3)
-    return l,err_dist
-
 def decode_spikes(monitor, spikes, Act_M, Act_m, err_dist):
     h=monitor.get("s")
     h=h.sum(dim=0).tolist()[0]
     
     actions = []
     for i in range(len(h)):
-        a = normalize(data=[h[i]], vmax=[spikes[0]-2], vmin=[spikes[1]+2], A=Act_M[i], B=Act_m[i])
+        a = normalize(data=[h[i]], vmax=[spikes[0]-5], vmin=[spikes[1]+5], A=Act_M[i], B=Act_m[i])
         actions = actions+a
         
-    actions.append(90);
+    actions.append(0)
+    if actions[1]>0:
+        actions[1]=90
+    else:
+        actions[1]=-90
     if err_dist<2:
         final = 1
     else:
         final = 0
     
     return actions+[final]
-    
-    

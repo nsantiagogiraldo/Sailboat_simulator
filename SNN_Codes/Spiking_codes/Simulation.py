@@ -22,6 +22,18 @@ class serial_port:
             band = [band]+position+angles+[wind]
 
         return band
+    
+    def read_data_sensor_2(self):
+        band = False
+        [band,recibe] = cm.read_data()
+        if band and self.j:
+            position =  [recibe['S1'],recibe['S2'],recibe['S3'],recibe['S4']]
+            angles = [recibe['S5'],recibe['S6'],recibe['S7']]
+            wind = recibe['S8']
+            band = [band]+[position]+[angles]+[wind]
+            print(position)
+
+        return band
 
     def write_control_action(self,control_action):
         band=False
@@ -49,7 +61,7 @@ class serial_port:
 
     def classic_controller(self):
         while self.j:
-            data=self.read_data_sensor()
+            data=self.read_data_sensor_2()
             if not isinstance(data,bool):
                 control = self.classic_control_action(data)
                 self.write_control_action(control)
