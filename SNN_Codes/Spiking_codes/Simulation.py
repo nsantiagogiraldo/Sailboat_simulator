@@ -16,7 +16,7 @@ class serial_port:
         band = False
         [band,recibe] = cm.read_data()
         if band and self.j:
-            position =  [recibe['S1'],recibe['S2'],recibe['S3'],recibe['S4']]
+            position =  [recibe['S1'],recibe['S2']]
             angles = [recibe['S5'],recibe['S6'],recibe['S7']]
             wind = recibe['S8']
             band = [band]+position+angles+[wind]
@@ -43,9 +43,13 @@ class serial_port:
 
         return band
 
-    def classic_control_action(self,data):
-        rudder_angle = ctr.rudder_ctrl(data[1],data[2])
-        sail_angle = ctr.sail_ctrl(data[3])
+    def classic_control_action(self,data,info=1000):
+        if info==1000:
+            rudder_angle = ctr.rudder_ctrl(data[1],data[2])
+            sail_angle = ctr.sail_ctrl(data[3])
+        else:
+            rudder_angle = info
+            sail_angle = ctr.sail_ctrl(data)
         result = ctr.verify_result()
 
         return [rudder_angle,sail_angle,result]
@@ -68,4 +72,5 @@ class serial_port:
                 #print(data[3])
             else:
                 print("No hay dato")
+                
 

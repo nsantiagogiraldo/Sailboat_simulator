@@ -41,4 +41,3 @@ To view the modified sailboat in its first version, perform the following steps:
 1. Modify the sailboat_control_heading.py file
 
 2. Execute all the steps from point 2 of the previous section
-
