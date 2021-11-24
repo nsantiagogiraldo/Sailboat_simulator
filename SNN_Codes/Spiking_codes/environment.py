@@ -8,6 +8,7 @@ Created on Mon Sep 27 13:14:17 2021
 import numpy as np
 
 class sailboat_environment:
+    
     waypoints = [
         [240.0, 100.0, 0.0],
         [250.0, 95.0, 0.0], #(255.0, 100.0, 0.0)
@@ -23,6 +24,7 @@ class sailboat_environment:
         [245.0, 100.0, 0.0],
         [240.0, 100.0, 0.0]
     ]
+    
     m=0
     theta=0
     b1=0
