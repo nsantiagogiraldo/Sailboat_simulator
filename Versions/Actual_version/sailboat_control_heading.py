@@ -5,17 +5,17 @@ import rospy
 import math
 import tf
 import communicate as cm
-import time as tm
 from sensor_msgs.msg import JointState
 from std_msgs.msg import Header
 from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Quaternion
 from geometry_msgs.msg import Twist, Point, Quaternion
 from std_msgs.msg import Float64
+from std_srvs.srv import Empty
 
 initial_pose = Odometry()
 target_pose = Odometry()
-rate_value = 10
+rate_value = 0.5
 result = Float64()
 result.data = 0
 windDir= Float64()
@@ -26,7 +26,7 @@ current_heading = 0
 heeling = 0
 spHeading = 10 
 isTacking = 0
-Control_time = 3
+Control_time = 2
 
 def get_pose(initial_pose_tmp):
     global initial_pose 
@@ -52,7 +52,7 @@ def talker_ctrl():
     global spHeading
 
     rospy.init_node('usv_simple_ctrl', anonymous=True)
-    rate = rospy.Rate(rate_value) # 10h
+    rate = rospy.Rate(rate_value) # 10Hz
     # publishes to thruster and rudder topics
     #pub_sail = rospy.Publisher('angleLimits', Float64, queue_size=10)
     pub_rudder = rospy.Publisher('joint_setpoint', JointState, queue_size=10)
@@ -94,11 +94,8 @@ def controller():
     global heeling
     global result
 	
-    rospy.loginfo("Antes de")
-    tm.sleep(Control_time)
-    rospy.loginfo("Despues de")
     port_name='interface_2'
-    direction= '/home/nelson/Documentos/Ubuntu_Maestria/SNN_Codes/Canal-Puertos'
+    direction= '/home/nelson/Documentos/Ubuntu_master/SNN_Codes/Spiking_codes'
     timeout=15
     rudder_angle=0
     sail_angle = 1
@@ -127,24 +124,33 @@ def controller():
     y = rospy.get_param('/uwsim/wind/y')
     global_dir = math.atan2(y,x)
     heeling = angle_saturation(math.degrees(global_dir)+180)
-    wind_dir = global_dir - current_heading
-    wind_dir = angle_saturation(math.degrees(wind_dir)+180)
-    windDir.data = math.radians(wind_dir)
+    wind_dir = global_dir + current_heading
+    wind_dir = angle_saturation(math.degrees(wind_dir))
+    windDir.data = math.radians(angle_saturation(math.degrees(wind_dir)+180))
     #############################################
 
     # Send all the position sensors information to controller in python 3
     try:
 	cm.serial_initialization(direction,port_name,timeout)
-        datos={'S1': x1, 'S2': y1, 'S3': x2, 'S4': y2, 'S5': euler[0], 'S6': euler[1], 'S7': euler[2], 'S8': wind_dir}
+	info=[]
+	info.append(round(math.degrees(euler[0]),0)) 
+	info.append(round(math.degrees(euler[1]),0)) 
+	info.append(round(math.degrees(-current_heading),0)) 
+	info.append(round(wind_dir,0)) 
+        datos={'S1': x1, 'S2': y1, 'S3': x2, 'S4': y2, 'S5': info[0], 'S6': info[1], 'S7': info[2], 'S8': info[3]}
         if not cm.write_data(datos):
             rospy.loginfo("No se pudo escribir en el puerto")
         else:
-            rospy.loginfo("Puerto Abierto")
             [band,recibe] = cm.read_data()
 	    if band: 
                 result_py3=recibe['A3']
                 rudder_angle=recibe['A1']
                 sail_angle=recibe['A2']
+		if result_py3 == 2:
+		    rospy.wait_for_service('/gazebo/reset_world')
+		    reset_world = rospy.ServiceProxy('/gazebo/reset_world', Empty)
+		    reset_world()
+	            result_py3=0
     except:
         rospy.loginfo("Error abriendo el puerto")
 
@@ -152,7 +158,6 @@ def controller():
 
     # Actualization of result
     result.data = int(result_py3)
-
     #############################################  
 
     return math.radians(rudder_angle),math.radians(sail_angle)

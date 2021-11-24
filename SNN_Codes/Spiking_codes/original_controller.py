@@ -78,17 +78,23 @@ def rudder_ctrl(position, euler):  # position=[x1,y1,x2,y2]  orientation=[x,y,z,
     return rudder_angle
 
 
-def sail_ctrl(wind_dir):
+def sail_ctrl(wind_dir,test):
     global current_heading
     global windDir
     global heeling
 
-    sail_angle = wind_dir / 2
+    sail_angle = wind_dir
 
-    if sail_angle < -80:
-        sail_angle = -sail_angle
+    if sail_angle  >0 and not test:
+        sail_angle = -80
+    elif  sail_angle  <0 and not test:
+        sail_angle = 80        
+    elif sail_angle  >0 and test:
+        sail_angle = -20
+    else:
+        sail_angle = 20
 
-    return -sail_angle
+    return sail_angle
 
 
 def verify_result():

@@ -40,6 +40,7 @@ def read_data():
         data = data_format(data[0:-1])
     except:
         read_correct = False
+        data=0
     return read_correct, data
 
 
