@@ -6,15 +6,16 @@ Created on Mon Sep 27 13:14:17 2021
 @author: nelson
 """
 import numpy as np
+import copy as cp
 
 class sailboat_environment:
     
     waypoints = [
         [240.0, 100.0, 0.0],
-        [250.0, 95.0, 0.0], #(255.0, 100.0, 0.0)
-        [255.0, 100.0, 0.0], #(260.0, 105.0, 0.0)
-        [250.0, 105.0, 0.0], #(265.0, 100.0, 0.0)
-        [240.0, 100.0, 0.0], #(270.0, 95.0, 0.0)
+        [255.0, 100.0, 0.0], #(255.0, 100.0, 0.0)
+        [260.0, 105.0, 0.0], #(260.0, 105.0, 0.0)
+        [265.0, 100.0, 0.0], #(265.0, 100.0, 0.0)
+        [270.0, 95.0, 0.0], #(270.0, 95.0, 0.0)
         [275.0, 100.0, 0.0],
         [270.0, 105.0, 0.0],
         [265.0, 100.0, 0.0],
@@ -40,15 +41,19 @@ class sailboat_environment:
     hyperparam = []
     saving = 0
     path = ''
+    learning =  True
+    prev_angle = 0
+    sum_angle = [0,0]
     
-    def __init__(self, rudder_ctrl, sail_ctrl, vmax, vmin, hyperparam, path):
+    def __init__(self, rudder_ctrl, sail_ctrl, vmax, vmin, hyperparam, path, learning = True):
         self.controllers.append(rudder_ctrl)
-        #self.controllers.append(sail_ctrl)
+        self.controllers.append(sail_ctrl)
         self.sensor_max = vmax
         self.sensor_min = vmin
         self.hyperparam = hyperparam
         self.path = path
-    
+        #self.learning = learning
+        
     def reward(self, data):
         
         for k in range(len(self.controllers)):
@@ -103,11 +108,19 @@ class sailboat_environment:
                                                min_value = self.sensor_min[0], 
                                                max_value = self.sensor_max[0], 
                                                num_state = self.hyperparam[3])
-                    
-                self.rewards[k] = self.puntual_reward(real_state=real_st, desired_state=self.hyperparam[3]//2, 
-                                                      num_states = self.hyperparam[3])
-                print(self.rewards[k])
-    
+                
+            else:
+                              
+                real_st = self.real_action(real_value=self.prev_angle, 
+                       desired_value = self.prev_sail_objective, 
+                       min_value = self.sensor_min[1], 
+                       max_value = self.sensor_max[1], 
+                       num_state = self.hyperparam[8])
+                
+            self.rewards[k] = self.puntual_reward(real_state=real_st, desired_state=self.hyperparam[3+5*k]//2, 
+                                                  num_states = self.hyperparam[3+5*k])
+                
+                               
     
     def normalize(self,data,vmax,vmin, A=1, B=0):
         fn=[]
@@ -136,15 +149,12 @@ class sailboat_environment:
             rst=control_action
         
         self.restart = rst
-        return rst
     
     def get_plane(self):
         l=[]
-        orig=[]
+        orig=[]        
         if self.restart == 2:
-            self.state = 0
-        else:
-            self.state += 1
+            self.state = 0           
         orig.append(self.waypoints[self.state][0])
         orig.append(self.waypoints[self.state][1])
         l.append(self.waypoints[self.state+1][0])
@@ -181,12 +191,29 @@ class sailboat_environment:
                 #(alpha<=hyperparam[2]/2 and alpha>=-hyperparam[2]/2) or
                 # (beta<=hyperparam[2]/2 and beta>=-hyperparam[2]/2) or
                 if  to_tacking_zone and obj_is_tacking:
-                    n3=1
+                    n3 = 1
                 else:
-                    n3=0
+                    n3 = 0
         
                 l[int(self.hyperparam[0]*(n3*self.hyperparam[1]+n2)+n1)] = max_rate
                 self.n_data.append(l)
+                
+            else:
+                
+                l = [min_rate]*int(3*self.hyperparam[7]);
+                actual_heading = data[5]
+                real_wind_angle = data[6] + actual_heading
+                actual_speed = np.sqrt(data[7]**2+data[8]**2)
+                angle_apparent = self.aparent_wind(real_wind_angle = real_wind_angle, 
+                                  sailboat_speed = actual_speed,
+                                  yaw = actual_heading)
+                self.sum_angle[0] = self.sum_angle[1]
+                self.sum_angle[1] = angle_apparent + actual_heading
+                n = self.hyperparam[7]*(self.sum_angle[1]+360)//720
+                n2 = self.waypoints[self.state+1][2]
+                l[int(self.hyperparam[7]*n2+n)] = max_rate
+                self.n_data.append(l)
+                
     
     def puntual_reward(self,real_state, desired_state, num_states):
         
@@ -225,12 +252,14 @@ class sailboat_environment:
         self.control_inputs(data = data, max_rate = max_rate, min_rate = min_rate)
         self.calculate_reward(data = data)
         for i in range(len(self.controllers)):
-            control_action[i] = self.controllers[i].train_episode(n_data = self.n_data[i],
-                                                                  reward = self.rewards[i])
+            control_action[i] = int(self.controllers[i].train_episode(n_data = self.n_data[i],
+                                                                  reward = self.rewards[i]))
         control_action[2] = self.is_finish()   
-        control_action[2] = self.is_restart([data[1],data[2]], control_action[2])
-        self.restart = control_action[2]
-        
+        self.is_restart([data[1],data[2]], control_action[2])
+        self.prev_angle = control_action[1]
+        self.prev_sail_objective = self.sail_aproximation(prev_yaw=data[5])
+        control_action[2] = self.restart
+        control_action[1] = -20
         return control_action
             
     def is_finish(self):
@@ -248,3 +277,25 @@ class sailboat_environment:
                 self.controllers[i].save_SNN(self.path)
             self.saving +=1
     
+    def aparent_wind(self, real_wind_angle, sailboat_speed, yaw):
+        
+        i = sailboat_speed
+        theta = np.arctan2(np.sin(real_wind_angle)-i*np.sin(yaw),
+                           np.cos(real_wind_angle)-i*np.cos(yaw))
+        return 180*theta/np.pi
+    
+    def sail_aproximation(self, prev_yaw):
+        
+        theta = [0,0]
+        angle = self.sum_angle[0]*np.pi/180
+        theta[0] = np.arctan2(np.sin(angle),(np.cos(angle)-1))*180/np.pi
+        theta[1] = theta[0]*(1-180/np.abs(theta[0]))
+        opt_theta = 0
+        
+        for k in theta:
+            theta_sail = k + 180 - prev_yaw
+            if theta_sail <= self.controllers[1].max_out and theta_sail >= self.controllers[1].min_out:
+                opt_theta = cp.copy(theta_sail)
+        
+        return opt_theta
+            

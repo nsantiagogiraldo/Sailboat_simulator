@@ -19,7 +19,8 @@ class serial_port:
             position =  [recibe['S1'],recibe['S2']]
             angles = [recibe['S5'],recibe['S6'],recibe['S7']]
             wind = recibe['S8']
-            band = [band]+position+angles+[wind]
+            speed = [recibe['S3'],recibe['S4']]
+            band = [band]+position+angles+[wind]+speed
 
         return band
     
