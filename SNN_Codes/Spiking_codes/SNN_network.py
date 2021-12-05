@@ -142,25 +142,25 @@ class spiking_neuron:
             wMin = int(info[8])
             max_o = int(info[9])
             min_o = int(info[10])
+            
+            self.layers = layer
+            self.spiking_monitors = spike_monitors
+            self.spiking_controller = network
+            self.weigths_monitors = weight_monitors
+            self.max_spikes = max_spikes
+            self.min_spikes = min_spikes
+            self.network_architecture = arq
+            self.time_network = time
+            self.dt = dt
+            self.redundance = red
+            self.max_weigth =wMax
+            self.coding = coding
+            self.min_weigth = wMin
+            self.max_out = max_o
+            self.min_out = min_o
     
         except:
             print("Error loading")
-            
-        self.layers = layer
-        self.spiking_monitors = spike_monitors
-        self.spiking_controller = network
-        self.weigths_monitors = weight_monitors
-        self.max_spikes = max_spikes
-        self.min_spikes = min_spikes
-        self.network_architecture = arq
-        self.time_network = time
-        self.dt = dt
-        self.redundance = red
-        self.max_weigth =wMax
-        self.coding = coding
-        self.min_weigth = wMin
-        self.max_out = max_o
-        self.min_out = min_o
 
     
     def SNN_encoding(self, dato, redundance):

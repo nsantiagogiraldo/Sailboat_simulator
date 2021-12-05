@@ -26,7 +26,7 @@ current_heading = 0
 heeling = 0
 spHeading = 10 
 isTacking = 0
-Control_time = 2
+reset_world = 0
 
 def get_pose(initial_pose_tmp):
     global initial_pose 
@@ -104,8 +104,8 @@ def controller():
 
     x1 = initial_pose.pose.pose.position.x
     y1 = initial_pose.pose.pose.position.y
-    x2 = target_pose.pose.pose.position.x
-    y2 = target_pose.pose.pose.position.y
+    x2 = initial_pose.twist.twist.linear.x
+    y2 = initial_pose.twist.twist.linear.y
     quaternion = (initial_pose.pose.pose.orientation.x, initial_pose.pose.pose.orientation.y, initial_pose.pose.pose.orientation.z,initial_pose.pose.pose.orientation.w) 
     euler = tf.transformations.euler_from_quaternion(quaternion)
 
@@ -147,8 +147,6 @@ def controller():
                 rudder_angle=recibe['A1']
                 sail_angle=recibe['A2']
 		if result_py3 == 2:
-		    rospy.wait_for_service('/gazebo/reset_world')
-		    reset_world = rospy.ServiceProxy('/gazebo/reset_world', Empty)
 		    reset_world()
 	            result_py3=0
     except:
@@ -173,6 +171,10 @@ def rudder_ctrl_msg():
     return msg
 
 if __name__ == '__main__':
+
+    global reset_world
+    rospy.wait_for_service('/gazebo/reset_world')
+    reset_world = rospy.ServiceProxy('/gazebo/reset_world', Empty)
     try:
         talker_ctrl()
     except rospy.ROSInterruptException:
