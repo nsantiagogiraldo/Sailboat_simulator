@@ -259,7 +259,7 @@ class sailboat_environment:
         self.prev_angle = control_action[1]
         self.prev_sail_objective = self.sail_aproximation(prev_yaw=data[5])
         control_action[2] = self.restart
-        control_action[1] = -20
+
         return control_action
             
     def is_finish(self):
@@ -280,7 +280,7 @@ class sailboat_environment:
     def aparent_wind(self, real_wind_angle, sailboat_speed, yaw):
         
         i = sailboat_speed
-        theta = np.arctan2(np.sin(real_wind_angle)-i*np.sin(yaw),
+        theta = np.arctan2(np.sin(np.pi*real_wind_angle/180)-i*np.sin(np.pi*yaw/180),
                            np.cos(real_wind_angle)-i*np.cos(yaw))
         return 180*theta/np.pi
     

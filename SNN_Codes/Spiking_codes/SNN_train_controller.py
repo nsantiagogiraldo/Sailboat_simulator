@@ -1,6 +1,5 @@
 import Simulation as sp
 import SNN_network as SNN
-import original_controller as ctr
 import environment as env
 
 Inference = False
@@ -23,7 +22,7 @@ step = 1e-0
 # Simulation and control times
 time_network=500
 # Network characteristics and connections
-hyperparam = [12,1,180,9,90,45,6,30,9]  #K1,K2,tacking area, exit states number, no go zone, tacking angle, channel length, K3, exit states sail
+hyperparam = [12,1,180,9,90,45,4,30,9]  #K1,K2,tacking area, exit states number, no go zone, tacking angle, channel length, K3, exit states sail
 files_names = ['rudder1', 'sail1']
 dt=1
 control_signals=[2*hyperparam[0]*hyperparam[1],3*hyperparam[7]]
@@ -83,7 +82,6 @@ if not Inference:
             if not isinstance(data,bool):
                 control_action = sail_env.environment_step(data = data, max_rate = max_freq,
                                                            min_rate = min_freq)
-                control_action[1] = ctr.sail_ctrl(10,False)
                 p.write_control_action(control_action)            
                 rudder_ctrl.print_weigths(im=None)
                 sail_env.save_SNN_state()
