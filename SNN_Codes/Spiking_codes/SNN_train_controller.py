@@ -22,7 +22,9 @@ step = 1e-0
 # Simulation and control times
 time_network=500
 # Network characteristics and connections
-hyperparam = [12,1,180,9,90,45,4,30,9]  #K1,K2,tacking area, exit states number, no go zone, tacking angle, channel length, K3, exit states sail
+hyperparam = [12,1,180,9,90,
+              45,4,30,9,275,
+              100,10]  #K1,K2,tacking area, exit states number, no go zone, tacking angle, channel length, K3, exit states sail, xcenter_train, ycenter_train, number_of_training_points
 files_names = ['rudder1', 'sail1']
 dt=1
 control_signals=[2*hyperparam[0]*hyperparam[1],3*hyperparam[7]]
