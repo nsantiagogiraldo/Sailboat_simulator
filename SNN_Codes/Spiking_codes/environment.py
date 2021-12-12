@@ -10,22 +10,7 @@ import copy as cp
 
 class sailboat_environment:
     
-    waypoints = [
-        [240.0, 100.0, 0.0],
-        [255.0, 100.0, 0.0], #(255.0, 100.0, 0.0)
-        [260.0, 105.0, 0.0], #(260.0, 105.0, 0.0)
-        [265.0, 100.0, 0.0], #(265.0, 100.0, 0.0)
-        [270.0, 95.0, 0.0], #(270.0, 95.0, 0.0)
-        [275.0, 100.0, 0.0],
-        [270.0, 105.0, 0.0],
-        [265.0, 100.0, 0.0],
-        [260.0, 95.0, 0.0],
-        [255.0, 100.0, 0.0],
-        [250.0, 105.0, 0.0],
-        [245.0, 100.0, 0.0],
-        [240.0, 100.0, 0.0]
-    ]
-    
+    waypoints = []
     m=0
     theta=0
     b1=0
@@ -53,7 +38,44 @@ class sailboat_environment:
         self.hyperparam = hyperparam
         self.path = path
         #self.learning = learning
+        self.train_scenario()
         
+    def train_scenario(self, train=True):
+        if train:
+            center = []
+            initial_point = [240, 100, 0]          
+            center.append(self.hyperparam[9])
+            center.append(self.hyperparam[10])
+            r = np.sqrt((initial_point[0]-center[0])**2+(initial_point[1]-center[1])**2)
+            n = self.hyperparam[11]
+            theta=np.arctan2(initial_point[1]-center[1], initial_point[0]-center[0])
+            
+            for i in range(n-1):
+                theta += 2*np.pi/n
+                print(np.degrees(theta))
+                x = int(r*np.cos(theta)+center[0])
+                y = int(r*np.sin(theta)+center[1])
+                self.waypoints.append([x,y,0])
+            np.random.shuffle(self.waypoints)
+            self.waypoints.insert(0, initial_point)
+            
+        else:
+            self.waypoints=[
+                [240.0, 100.0, 0.0],
+                [255.0, 100.0, 0.0], #(255.0, 100.0, 0.0)
+                [260.0, 105.0, 0.0], #(260.0, 105.0, 0.0)
+                [265.0, 100.0, 0.0], #(265.0, 100.0, 0.0)
+                [270.0, 95.0, 0.0], #(270.0, 95.0, 0.0)
+                [275.0, 100.0, 0.0],
+                [270.0, 105.0, 0.0],
+                [265.0, 100.0, 0.0],
+                [260.0, 95.0, 0.0],
+                [255.0, 100.0, 0.0],
+                [250.0, 105.0, 0.0],
+                [245.0, 100.0, 0.0],
+                [240.0, 100.0, 0.0]
+            ]
+            
     def reward(self, data):
         
         for k in range(len(self.controllers)):
@@ -259,6 +281,7 @@ class sailboat_environment:
         self.prev_angle = control_action[1]
         self.prev_sail_objective = self.sail_aproximation(prev_yaw=data[5])
         control_action[2] = self.restart
+        print(control_action[1])
 
         return control_action
             
@@ -288,6 +311,7 @@ class sailboat_environment:
         
         theta = [0,0]
         angle = self.sum_angle[0]*np.pi/180
+        print(self.sum_angle[0])
         theta[0] = np.arctan2(np.sin(angle),(np.cos(angle)-1))*180/np.pi
         theta[1] = theta[0]*(1-180/np.abs(theta[0]))
         opt_theta = 0
