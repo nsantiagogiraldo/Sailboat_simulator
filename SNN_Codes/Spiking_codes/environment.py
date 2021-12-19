@@ -31,7 +31,8 @@ class sailboat_environment:
     sum_angle = [0,0]
     actual_speed = 0
     tack = False
-    prev_state = 2
+    tack_direction = -1
+    desired_heading = 0
     
     def __init__(self, rudder_ctrl, sail_ctrl, vmax, vmin, hyperparam, path, learning = True):
         self.controllers.append(rudder_ctrl)
@@ -86,53 +87,58 @@ class sailboat_environment:
         for k in range(len(self.controllers)):
             if self.controllers[k].is_rudder_controller: 
                 
-                objective = 180*np.arctan2(self.waypoints[self.state+1][1]-data[2],
-                                           self.waypoints[self.state+1][0]-data[1])/np.pi 
+                # objective = 180*np.arctan2(self.waypoints[self.state+1][1]-data[2],
+                #                            self.waypoints[self.state+1][0]-data[1])/np.pi 
                 heading = data[5]
-                actual_heading = data[5]
-                real_wind_angle = data[6] + actual_heading
-
-                if  self.tack:
+                #actual_heading = data[5]
+                #real_wind_angle = data[6] + actual_heading
+                
+                real_st = self.real_action(real_value=heading, 
+                                           desired_value = self.desired_heading, 
+                                           min_value = self.sensor_min[0], 
+                                           max_value = self.sensor_max[0], 
+                                           num_state = self.hyperparam[3])
+                # if  self.tack:
                     
                     
-                    # to_no_go_zone = (alpha<=self.hyperparam[4]/2 and alpha>=-self.hyperparam[4]/2) or (180-self.hyperparam[4]*0.5<=alpha or 0.5*self.hyperparam[4]-180>=alpha)
+                #     # to_no_go_zone = (alpha<=self.hyperparam[4]/2 and alpha>=-self.hyperparam[4]/2) or (180-self.hyperparam[4]*0.5<=alpha or 0.5*self.hyperparam[4]-180>=alpha)
                     
-                    # err_ang = objective - actual_heading
+                #     # err_ang = objective - actual_heading
         
-                    # if to_no_go_zone and err_ang >0:
-                    #     objective = 180-self.hyperparam[5]
-                    # elif to_no_go_zone and err_ang <0:
-                    #     objective = -180+self.hyperparam[5]
-                    # elif not to_no_go_zone and err_ang >0:
-                    #     objective = -180+self.hyperparam[5]  #real_wind_angle+hyperparam[5]
-                    # else:
-                    #     objective = 180-self.hyperparam[5] 
+                #     # if to_no_go_zone and err_ang >0:
+                #     #     objective = 180-self.hyperparam[5]
+                #     # elif to_no_go_zone and err_ang <0:
+                #     #     objective = -180+self.hyperparam[5]
+                #     # elif not to_no_go_zone and err_ang >0:
+                #     #     objective = -180+self.hyperparam[5]  #real_wind_angle+hyperparam[5]
+                #     # else:
+                #     #     objective = 180-self.hyperparam[5] 
                         
-                    # real_st = self.real_action(real_value=heading, 
-                    #                            desired_value = objective, 
-                    #                            min_value = self.sensor_min[0], 
-                    #                            max_value = self.sensor_max[0], 
-                    #                            num_state = self.hyperparam[3])
+                #     # real_st = self.real_action(real_value=heading, 
+                #     #                            desired_value = objective, 
+                #     #                            min_value = self.sensor_min[0], 
+                #     #                            max_value = self.sensor_max[0], 
+                #     #                            num_state = self.hyperparam[3])
                     
-                    # # if to_no_go_zone and real_st <= self.hyperparam[3]//2:
-                    # #     desired_state=self.hyperparam[3]
-                    # # elif to_no_go_zone and real_st < self.hyperparam[3]//2:
-                    # #     desired_state=0
-                    # # elif not to_no_go_zone and real_st >= self.hyperparam[3]//2:
-                    # #     desired_state=0
-                    # # else:
-                    # #     desired_state=hyperparam[3]
+                #     # # if to_no_go_zone and real_st <= self.hyperparam[3]//2:
+                #     # #     desired_state=self.hyperparam[3]
+                #     # # elif to_no_go_zone and real_st < self.hyperparam[3]//2:
+                #     # #     desired_state=0
+                #     # # elif not to_no_go_zone and real_st >= self.hyperparam[3]//2:
+                #     # #     desired_state=0
+                #     # # else:
+                #     # #     desired_state=hyperparam[3]
                     
-                    # # r = self.puntual_reward(real_state=real_st, desired_state=self.hyperparam[3]//2, 
-                    # #                         num_states = self.hyperparam[3])
-                    print("Tacking")
-                else:
+                #     # # r = self.puntual_reward(real_state=real_st, desired_state=self.hyperparam[3]//2, 
+                #     # #                         num_states = self.hyperparam[3])
+                #     print("Tacking")
+                # else:
                     
-                    real_st = self.real_action(real_value=heading, 
-                                               desired_value = objective, 
-                                               min_value = self.sensor_min[0], 
-                                               max_value = self.sensor_max[0], 
-                                               num_state = self.hyperparam[3])
+                #     real_st = self.real_action(real_value=heading, 
+                #                                desired_value = objective, 
+                #                                min_value = self.sensor_min[0], 
+                #                                max_value = self.sensor_max[0], 
+                #                                num_state = self.hyperparam[3])
                 
             else:
                               
@@ -144,7 +150,7 @@ class sailboat_environment:
                 
             self.rewards[k] = self.puntual_reward(real_state=real_st, desired_state=self.hyperparam[3+5*k]//2, 
                                                   num_states = self.hyperparam[3+5*k])
-        print(self.rewards[0])
+        print(self.desired_heading)
                 
                                
     
@@ -176,15 +182,15 @@ class sailboat_environment:
         
         self.restart = rst
     
-    def get_plane(self):
+    def get_plane(self,orig_x,orig_y,next_x,next_y):
         l=[]
         orig=[]        
         if self.restart == 2:
             self.state = 0           
-        orig.append(self.waypoints[self.state][0])
-        orig.append(self.waypoints[self.state][1])
-        l.append(self.waypoints[self.state+1][0])
-        l.append(self.waypoints[self.state+1][1])
+        orig.append(orig_x)
+        orig.append(orig_y)
+        l.append(next_x)
+        l.append(next_y)
     
         return orig,l
     
@@ -193,37 +199,42 @@ class sailboat_environment:
         self.distance=np.sqrt((data[1]-self.waypoints[self.state+1][0])**2+(data[2]-self.waypoints[self.state+1][1])**2)
         self.n_data = []
         
+        actual_heading = data[5] 
+        real_wind_angle = data[6] + actual_heading
+        self.actual_speed = np.sqrt(data[7]**2+data[8]**2)
+        
         for i in range(len(self.controllers)):
             if self.controllers[i].is_rudder_controller: # State coding, this metod works with MSTDP, choosen method
-                l = [min_rate]*int(self.hyperparam[0]*self.hyperparam[1]);
+                l = [min_rate]*int(2*self.hyperparam[0]*self.hyperparam[1]+1);
                 pitch = data[3]
-                actual_heading = data[5] 
-                real_wind_angle = data[6] + actual_heading
                 alpha = -data[6] # A variable for detect if the sailboat is on tacking zone
-                desired_heading = 180*np.arctan2(self.waypoints[self.state+1][1]-data[2],
-                                                 self.waypoints[self.state+1][0]-data[1])/np.pi
-                beta = desired_heading - real_wind_angle # A variable for detect if the objective is on tacking zone
+                self.desired_heading = 180*np.arctan2(self.waypoints[self.state+1][1]-data[2],
+                                                      self.waypoints[self.state+1][0]-data[1])/np.pi
+                beta = self.desired_heading - real_wind_angle # A variable for detect if the objective is on tacking zone
                 
                 to_tacking_zone_UW =  180-self.hyperparam[2]*0.5<=alpha or 0.5*self.hyperparam[2]-180>=alpha
                 obj_is_tacking_UW =  180-self.hyperparam[2]*0.5<=beta or 0.5*self.hyperparam[2]-180>=beta 
                 to_tacking_zone_TW =  alpha<=self.hyperparam[2]/2 and alpha>=-self.hyperparam[2]/2
                 obj_is_tacking_TW = beta<=self.hyperparam[2]/2 and beta>=-self.hyperparam[2]/2
 
-                if  to_tacking_zone_UW and obj_is_tacking_UW:
+                if  to_tacking_zone_UW and obj_is_tacking_UW:                   
+                    self.refresh_tack_direction(heading_angle = actual_heading, 
+                                                real_wind = real_wind_angle,
+                                                tack_angle=self.tack_direction*self.hyperparam[5])
+                    self.desired_heading = self.tack_direction*self.hyperparam[5]+real_wind_angle
                     self.tack = True
-                    desired_heading = self.upper_controller(type_tacking = 0,
-                                                            wind_angle = real_wind_angle,
-                                                            heading = actual_heading)
-                elif o_tacking_zone_TW and obj_is_tacking_TW:
+                    l[len(l)-1] = int(max_rate*(self.tack_direction+1)//2)
+                elif to_tacking_zone_TW and obj_is_tacking_TW:                   
+                    self.refresh_tack_direction(heading_angle = actual_heading, 
+                                                real_wind = real_wind_angle,
+                                                tack_angle = self.tack_direction*self.hyperparam[13])
+                    self.desired_heading = self.tack_direction*self.hyperparam[13]+real_wind_angle
                     self.tack = True
-                    desired_heading = self.upper_controller(type_tacking = 1,
-                                                            wind_angle=real_wind_angle,
-                                                            heading = actual_heading)
+                    l[len(l)-1] = int(max_rate*(-self.tack_direction+1)//2)
                 else:
                     self.tack = False
-                    self.prev_state = 2
                     
-                err_ang = desired_heading - actual_heading
+                err_ang = self.desired_heading - actual_heading
                 
                 
                 if abs(err_ang)>self.sensor_max[0]:
@@ -233,17 +244,14 @@ class sailboat_environment:
                 
                 n1 = ((err_ang+self.sensor_max[0])*self.hyperparam[0])//180
                 n2 = ((pitch+self.sensor_max[2])*2*self.hyperparam[1])//180      
-
+                n3 = self.tack
         
-                l[int(self.hyperparam[0]*n2+n1)] = max_rate
+                l[int(self.hyperparam[0]*(self.hyperparam[1]*n3+n2)+n1)] = max_rate
                 self.n_data.append(l)
                 
             else:
                 
                 l = [min_rate]*int(3*self.hyperparam[7]);
-                actual_heading = data[5]
-                real_wind_angle = data[6] + actual_heading
-                self.actual_speed = np.sqrt(data[7]**2+data[8]**2)
                 angle_apparent = self.aparent_wind(real_wind_angle = real_wind_angle, 
                                   sailboat_speed = self.actual_speed,
                                   yaw = actual_heading)
@@ -278,7 +286,17 @@ class sailboat_environment:
     def calculate_reward(self, data):
            
         if self.restart ==2 or self.restart ==1:
-            ro,r = self.get_plane()           
+            if not self.tack:
+                ro,r = self.get_plane(orig_x = self.waypoints[self.state][0],
+                                      orig_y = self.waypoints[self.state][1],
+                                      next_x = self.waypoints[self.state+1][0],
+                                      next_y = self.waypoints[self.state+1][1])
+            else:
+                ro,r = self.get_plane(orig_x = data[1],
+                                      orig_y = data[2],
+                                      next_x = data[1]+np.cos(np.radians(self.desired_heading)),
+                                      next_y = data[2]+np.sin(np.radians(self.desired_heading)))
+                
             self.carril_velero(ro,r,self.hyperparam[6])
             self.rewards = [0,0]
             for i in range(len(self.controllers)):
@@ -298,6 +316,10 @@ class sailboat_environment:
         self.is_restart([data[1],data[2]], control_action[2])
         self.prev_angle = control_action[1]
         self.prev_sail_objective = self.sail_aproximation(prev_yaw=data[5])
+        if self.prev_sail_objective > 0:
+            control_action[1] = 90
+        else:
+            control_action[1] = -90
         control_action[2] = self.restart
 
         return control_action
@@ -339,13 +361,10 @@ class sailboat_environment:
         
         return opt_theta
             
-    def upper_controller(self, type_tacking, wind_angle, heading):
-        if type_tacking == 1:
-            if self.prev_state == 2:
-                diff_angle = heading - wind_angle
-                self.prev_state = diff_angle//np.abs(diff_angle)
-            elif self.actual_speed > self.hyperparam[12]:
-                self.prev_state = -self.prev_state
-            desired_heading = wind_angle+self.prev_state*self.hyperparam[5]
-        return desired_heading
-            
+    def refresh_tack_direction(self,heading_angle,real_wind,tack_angle):
+        h = heading_angle-real_wind
+        if not self.tack:
+            self.tack_direction = h/np.abs(h)      
+        elif self.actual_speed > self.hyperparam[12] and h<tack_angle+30 and h>tack_angle-30:
+            self.restart = 1
+            self.tack_direction *= -1
