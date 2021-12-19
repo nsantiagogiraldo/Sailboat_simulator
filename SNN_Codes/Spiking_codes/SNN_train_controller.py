@@ -22,9 +22,9 @@ step = 1e-0
 # Simulation and control times
 time_network=500
 # Network characteristics and connections
-hyperparam = [12,1,180,9,45,
+hyperparam = [12,1,180,9,30,
               60,5,30,9,275,
-              100,10,0.8]  #K1,K2,tacking area 1, exit states number, tacking area 2, tacking angle, channel length, K3, exit states sail, xcenter_train, ycenter_train, number_of_training_points, max_speed_tacking
+              100,10,0.44,45]  #K1,K2,tacking area 1, exit states number, tacking area 2, tacking angle, channel length, K3, exit states sail, xcenter_train, ycenter_train, number_of_training_points, max_speed_tacking,tacking angle 2
 files_names = ['rudder1', 'sail1']
 dt=1
 control_signals=[hyperparam[0]*hyperparam[1],3*hyperparam[7]]
@@ -34,7 +34,7 @@ max_freq=240
 codify = 'poisson'
 redundance = [2,2]
 recurrent = [0,0]
-neur = [[control_signals[0]*redundance[0],number_actuators],
+neur = [[2*control_signals[0]*redundance[0]+2,number_actuators],
        [control_signals[1]*redundance[1],number_actuators]]
 
 if not Inference:
@@ -85,7 +85,7 @@ if not Inference:
                 control_action = sail_env.environment_step(data = data, max_rate = max_freq,
                                                            min_rate = min_freq)
                 p.write_control_action(control_action)            
-                rudder_ctrl.print_weigths(im=None)
-                sail_env.save_SNN_state()
+                #rudder_ctrl.print_weigths(im=None)
+                #sail_env.save_SNN_state()
             else:
                 print("No data")
