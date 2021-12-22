@@ -11,10 +11,10 @@ timeout=15
 p = sp.serial_port(direction, port_name, timeout)
 
 # Sensor ranges
-vmax=[60, 30, 30, 180]
-vmin=[-60, -30, -30, -180]
-AM=[30,90]
-Am=[-30,-90]
+vmax=[90, 30, 30, 180]
+vmin=[-90, -30, -30, -180]
+AM=[20,90]
+Am=[-20,-90]
 # Size step of algorithm
 PMax = 10
 Pmin = 0
@@ -23,7 +23,7 @@ step = 1e-0
 time_network=500
 # Network characteristics and connections
 hyperparam = [12,1,180,9,30,
-              60,5,30,9,275,
+              60,4,30,9,275,
               100,10,0.44,45]  #K1,K2,tacking area 1, exit states number, tacking area 2, tacking angle, channel length, K3, exit states sail, xcenter_train, ycenter_train, number_of_training_points, max_speed_tacking,tacking angle 2
 files_names = ['rudder1', 'sail1']
 dt=1
@@ -34,7 +34,7 @@ max_freq=240
 codify = 'poisson'
 redundance = [2,2]
 recurrent = [0,0]
-neur = [[2*control_signals[0]*redundance[0]+2,number_actuators],
+neur = [[3*control_signals[0]*redundance[0],number_actuators],
        [control_signals[1]*redundance[1],number_actuators]]
 
 if not Inference:
@@ -44,14 +44,16 @@ if not Inference:
                                      time_network = time_network, 
                                      redundance = redundance[0],
                                      max_out = AM[0], 
-                                     min_out = Am [0])
+                                     min_out = Am [0],
+                                     exit_state = hyperparam[3])
     
     sails_ctrl = SNN.spiking_neuron(controller='sail', 
                                     name = files_names[1], 
                                     time_network = time_network, 
                                     redundance = redundance[1],
                                     max_out = AM[1], 
-                                    min_out = Am [1])
+                                    min_out = Am [1],
+                                    exit_state = hyperparam[8])
     
     i= input("Load SNN (0) or new SNN (1)")
     

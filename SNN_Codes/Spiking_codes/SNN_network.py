@@ -28,8 +28,9 @@ class spiking_neuron:
     dt = 1
     max_out = 0
     min_out =0
+    out_states = 0
     
-    def __init__(self, controller, name, time_network, redundance, max_out, min_out):
+    def __init__(self, controller, name, time_network, redundance, max_out, min_out, exit_state):
         if controller == "rudder":
             self.is_rudder_controller = True
         else:
@@ -39,6 +40,7 @@ class spiking_neuron:
         self.redundance = redundance
         self.max_out = max_out
         self.min_out = min_out
+        self.out_states = exit_state
             
     def SNN_setup(self, neurons, dt, time, recurrent, model, wM, wm, n, codify, maximum, minimun):
         data=[]
@@ -102,7 +104,7 @@ class spiking_neuron:
             f.write(str(self.max_spikes)+'\n'+str(self.min_spikes)+'\n'+arq_str[1:len(arq_str)-1]+'\n'
                     +str(self.time_network)+'\n'+str(self.redundance)+'\n'+str(self.dt)+'\n'+self.coding+
                     '\n'+str(self.max_weigth)+'\n'+str(self.min_weigth)+'\n'+str(self.max_out)+'\n'+
-                    str(self.min_out))
+                    str(self.min_out)+'\n'+str(self.out_states))
             f.close()
         except:
             j=False
@@ -142,6 +144,7 @@ class spiking_neuron:
             wMin = int(info[8])
             max_o = int(info[9])
             min_o = int(info[10])
+            exit_states = int(info[11])
             
             self.layers = layer
             self.spiking_monitors = spike_monitors
@@ -158,6 +161,7 @@ class spiking_neuron:
             self.min_weigth = wMin
             self.max_out = max_o
             self.min_out = min_o
+            self.out_states = exit_states
     
         except:
             print("Error loading")
@@ -294,6 +298,9 @@ class spiking_neuron:
              
         for i in range(len(h)):
             a = self.normalize(data=[h[i]], vmax=[spikes[0]-2], vmin=[spikes[1]+2], A=self.max_out, B=self.min_out)
+            k = (self.max_out-self.min_out)/self.out_states
+            state = a[0]//k
+            a[0] = int(((2*state+1)*k+self.min_out)//2)
             actions = actions+a
             
         return actions[0]
