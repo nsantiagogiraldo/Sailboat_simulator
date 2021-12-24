@@ -15,7 +15,7 @@ from std_srvs.srv import Empty
 
 initial_pose = Odometry()
 target_pose = Odometry()
-rate_value = 0.5
+rate_value = 1
 result = Float64()
 result.data = 0
 windDir= Float64()
@@ -54,7 +54,7 @@ def talker_ctrl():
     rospy.init_node('usv_simple_ctrl', anonymous=True)
     rate = rospy.Rate(rate_value) # 10Hz
     # publishes to thruster and rudder topics
-    #pub_sail = rospy.Publisher('angleLimits', Float64, queue_size=10)
+    pub_sail = rospy.Publisher('angleLimits', Float64, queue_size=10)
     pub_rudder = rospy.Publisher('joint_setpoint', JointState, queue_size=10)
     pub_result = rospy.Publisher('move_usv/result', Float64, queue_size=10)
     pub_heading = rospy.Publisher('currentHeading', Float64, queue_size=10)
@@ -68,7 +68,9 @@ def talker_ctrl():
 
     while not rospy.is_shutdown():
         try:
-            pub_rudder.publish(rudder_ctrl_msg())
+	    final = rudder_ctrl_msg()
+            pub_rudder.publish(final[0])
+	    pub_sail.publish(final[1])
             pub_result.publish(result)
             pub_heading.publish(currentHeading)
             pub_windDir.publish(windDir)
@@ -157,7 +159,7 @@ def controller():
     # Actualization of result
     result.data = int(result_py3)
     #############################################  
-
+    #Timon y vela
     return math.radians(rudder_angle),math.radians(sail_angle)
 
 def rudder_ctrl_msg():
@@ -168,7 +170,7 @@ def rudder_ctrl_msg():
     msg.position = [res[0], res[1]]
     msg.velocity = []
     msg.effort = []
-    return msg
+    return msg,res[1]
 
 if __name__ == '__main__':
 
