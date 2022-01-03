@@ -28,11 +28,12 @@ class sailboat_environment:
     path = ''
     learning =  True
     prev_angle = 0
-    sum_angle = [0,0]
+    sum_angle = 0
     actual_speed = 0
     tack = False
     tack_direction = -1
     desired_heading = 0
+    
     
     def __init__(self, rudder_ctrl, sail_ctrl, vmax, vmin, hyperparam, path, learning = True):
         self.controllers.append(rudder_ctrl)
@@ -93,10 +94,10 @@ class sailboat_environment:
                 #actual_heading = data[5]
                 #real_wind_angle = data[6] + actual_heading
                 
-                real_st = self.real_action(real_value=heading, 
-                                           desired_value = self.desired_heading, 
-                                           min_value = self.sensor_min[0], 
-                                           max_value = self.sensor_max[0], 
+                real_st = self.real_action(real_value=heading,
+                                           desired_value = self.desired_heading,
+                                           min_value = self.sensor_min[0],
+                                           max_value = self.sensor_max[0],
                                            num_state = self.hyperparam[3])
                 # if  self.tack:
                     
@@ -194,8 +195,7 @@ class sailboat_environment:
         return orig,l
     
     def control_inputs(self, data, max_rate, min_rate):
-        
-        self.distance=np.sqrt((data[1]-self.waypoints[self.state+1][0])**2+(data[2]-self.waypoints[self.state+1][1])**2)
+        self.distance = np.sqrt((data[1]-self.waypoints[self.state+1][0])**2+(data[2]-self.waypoints[self.state+1][1])**2)
         self.n_data = []
         
         actual_heading = data[5] 
@@ -209,7 +209,10 @@ class sailboat_environment:
                 alpha = -data[6] # A variable for detect if the sailboat is on tacking zone
                 self.desired_heading = 180*np.arctan2(self.waypoints[self.state+1][1]-data[2],
                                                       self.waypoints[self.state+1][0]-data[1])/np.pi
-                beta = self.desired_heading - real_wind_angle # A variable for detect if the objective is on tacking zone
+                  # A variable for detect if the objective is on tacking zone
+                beta = self.angle_saturation(ang = self.desired_heading - real_wind_angle, 
+                                             min_ang=-180, 
+                                             max_ang=180)
                 
                 to_tacking_zone_UW =  180-self.hyperparam[2]*0.5<=alpha or 0.5*self.hyperparam[2]-180>=alpha
                 obj_is_tacking_UW =  180-self.hyperparam[2]*0.5<=beta or 0.5*self.hyperparam[2]-180>=beta 
@@ -232,7 +235,9 @@ class sailboat_environment:
                     self.tack = False
                     n3 = 0
                     
-                err_ang = self.desired_heading - actual_heading
+                err_ang = self.angle_saturation(ang=self.desired_heading - actual_heading, 
+                                                min_ang=-180, 
+                                                max_ang=180)
                  
                 if abs(err_ang)>=self.sensor_max[0]:
                     err_ang = (self.sensor_max[0]-1)*err_ang/abs(err_ang)
@@ -251,9 +256,10 @@ class sailboat_environment:
                 angle_apparent = self.aparent_wind(real_wind_angle = real_wind_angle, 
                                   sailboat_speed = self.actual_speed,
                                   yaw = actual_heading)
-                self.sum_angle[0] = self.sum_angle[1]
-                self.sum_angle[1] = angle_apparent + actual_heading
-                n = self.hyperparam[7]*(self.sum_angle[1]+360)//720
+                self.sum_angle = self.angle_saturation(ang = angle_apparent + actual_heading, 
+                                                       min_ang=-180, 
+                                                       max_ang=180)
+                n = (self.hyperparam[7]*(self.sum_angle+180))//360
                 n2 = self.waypoints[self.state+1][2]
                 l[int(self.hyperparam[7]*n2+n)] = max_rate
                 self.n_data.append(l)
@@ -313,7 +319,7 @@ class sailboat_environment:
         self.prev_sail_objective = self.sail_aproximation(prev_yaw=data[5])
         control_action[1] = self.prev_sail_objective
         control_action[2] = self.restart
-        print(control_action[1])
+        print(control_action[0])
 
         return control_action
             
@@ -342,26 +348,44 @@ class sailboat_environment:
     def sail_aproximation(self, prev_yaw):
         
         theta = [0,0]
-        angle = self.sum_angle[0]*np.pi/180
-        theta[0] = np.arctan2(np.sin(angle),(np.cos(angle)-1))*180/np.pi
-        theta[1] = theta[0]*(1-180/np.abs(theta[0]))
+        angle = self.sum_angle*np.pi/180
+        theta_sail = np.arctan(np.sin(angle)/(np.cos(angle)-1))*180/np.pi
+        theta[0] = theta_sail - prev_yaw
+        theta[1] = theta[0] + 180
         opt_theta = 0
         
-        for k in theta:
-            theta_sail = k + 180 - prev_yaw
-            if theta_sail <= self.controllers[1].max_out and theta_sail >= self.controllers[1].min_out:
-                opt_theta = cp.copy(theta_sail)
+        for theta_sail in theta:
+            alpha = self.angle_saturation(ang=theta_sail,
+                                          min_ang=-180,
+                                          max_ang=180)
+            if alpha <= self.controllers[1].max_out and alpha >= self.controllers[1].min_out:
+                opt_theta = cp.copy(alpha)
         
         return opt_theta
             
     def refresh_tack_direction(self,heading_angle,real_wind,tack_angle):
-        h = heading_angle-real_wind
+        
+        h = self.angle_saturation(ang = heading_angle-real_wind, 
+                                  min_ang=-180, 
+                                  max_ang=180)
+        
+        l = self.angle_saturation(ang = self.desired_heading - real_wind, 
+                                  min_ang=-180, 
+                                  max_ang=180)
         if h == 0:
             h = 0.01
         if not self.tack:
             self.tack_direction = h/np.abs(h)
-        elif self.actual_speed > self.hyperparam[12] and h<tack_angle+30 and h>tack_angle-30:
+        elif self.actual_speed > self.hyperparam[12] and h<tack_angle+20 and h>tack_angle-20 and ((l<10 and l>-10) or l<-170 or l>170):
             self.restart = 1
             self.tack_direction *= -1
             
         return 0.5*(self.tack_direction+3)
+    
+    def angle_saturation(self,ang,min_ang,max_ang,degree=True):
+        complete = (degree*360)+2*(1-degree)*np.pi
+        if ang < min_ang:
+            ang += complete
+        elif ang >= max_ang:
+            ang -= complete
+        return ang

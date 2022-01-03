@@ -299,8 +299,8 @@ class spiking_neuron:
         for i in range(len(h)):
             a = self.normalize(data=[h[i]], vmax=[spikes[0]-2], vmin=[spikes[1]+2], A=self.max_out, B=self.min_out)
             k = (self.max_out-self.min_out)/self.out_states
-            state = a[0]//k
-            a[0] = int(((2*state+1)*k+self.min_out)//2)
+            state = int((a[0]+self.max_out)/k)
+            a[0] = int(((2*state+1)*k+2*self.min_out)//2)
             actions = actions+a
             
         return actions[0]
