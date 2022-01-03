@@ -24,7 +24,7 @@ time_network=500
 # Network characteristics and connections
 hyperparam = [12,1,180,9,30,
               60,4,30,9,275,
-              100,10,0.44,45]  #K1,K2,tacking area 1, exit states number, tacking area 2, tacking angle, channel length, K3, exit states sail, xcenter_train, ycenter_train, number_of_training_points, max_speed_tacking,tacking angle 2
+              100,10,0.47,45]  #K1,K2,tacking area 1, exit states number, tacking area 2, tacking angle, channel length, K3, exit states sail, xcenter_train, ycenter_train, number_of_training_points, max_speed_tacking,tacking angle 2
 files_names = ['rudder1', 'sail1']
 dt=1
 control_signals=[hyperparam[0]*hyperparam[1],3*hyperparam[7]]
