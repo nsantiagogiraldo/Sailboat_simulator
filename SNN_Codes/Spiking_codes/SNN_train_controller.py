@@ -11,8 +11,8 @@ timeout=15
 p = sp.serial_port(direction, port_name, timeout)
 
 # Sensor ranges
-vmax=[90, 30, 30, 180]
-vmin=[-90, -30, -30, -180]
+vmax=[45, 30, 30, 180]
+vmin=[-45, -30, -30, -180]
 AM=[25,90]
 Am=[-25,-90]
 # Size step of algorithm
@@ -23,8 +23,8 @@ step = 1e-0
 time_network=500
 # Network characteristics and connections
 hyperparam = [12,1,180,7,30,
-              60,4,30,9,275,
-              100,10,0.42,45]  #K1,K2,tacking area 1, exit states number, tacking area 2, tacking angle, channel length, K3, exit states sail, xcenter_train, ycenter_train, number_of_training_points, max_speed_tacking,tacking angle 2
+              70,4,30,17,275,
+              100,10,0.48,45]  #K1,K2,tacking area 1, exit states number, tacking area 2, tacking angle, channel length, K3, exit states sail, xcenter_train, ycenter_train, number_of_training_points, max_speed_tacking,tacking angle 2
 files_names = ['rudder1', 'sail1']
 dt=1
 control_signals=[hyperparam[0]*hyperparam[1],3*hyperparam[7]]
@@ -88,6 +88,5 @@ if not Inference:
                                                            min_rate = min_freq)
                 p.write_control_action(control_action)            
                 #rudder_ctrl.print_weigths(im=None)
-                #sail_env.save_SNN_state()
             else:
                 print("No data")
