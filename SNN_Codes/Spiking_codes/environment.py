@@ -87,61 +87,13 @@ class sailboat_environment:
     def reward(self, data):
         
         for k in range(len(self.controllers)):
-            if self.controllers[k].is_rudder_controller: 
-                
-                # objective = 180*np.arctan2(self.waypoints[self.state+1][1]-data[2],
-                #                            self.waypoints[self.state+1][0]-data[1])/np.pi 
+            if self.controllers[k].is_rudder_controller:            
                 heading = data[5]
-                #actual_heading = data[5]
-                #real_wind_angle = data[6] + actual_heading
-                
                 real_st = self.real_action(real_value=heading,
                                            desired_value = self.desired_heading,
                                            min_value = self.sensor_min[0],
                                            max_value = self.sensor_max[0],
-                                           num_state = self.hyperparam[3])
-                # if  self.tack:
-                    
-                    
-                #     # to_no_go_zone = (alpha<=self.hyperparam[4]/2 and alpha>=-self.hyperparam[4]/2) or (180-self.hyperparam[4]*0.5<=alpha or 0.5*self.hyperparam[4]-180>=alpha)
-                    
-                #     # err_ang = objective - actual_heading
-        
-                #     # if to_no_go_zone and err_ang >0:
-                #     #     objective = 180-self.hyperparam[5]
-                #     # elif to_no_go_zone and err_ang <0:
-                #     #     objective = -180+self.hyperparam[5]
-                #     # elif not to_no_go_zone and err_ang >0:
-                #     #     objective = -180+self.hyperparam[5]  #real_wind_angle+hyperparam[5]
-                #     # else:
-                #     #     objective = 180-self.hyperparam[5] 
-                        
-                #     # real_st = self.real_action(real_value=heading, 
-                #     #                            desired_value = objective, 
-                #     #                            min_value = self.sensor_min[0], 
-                #     #                            max_value = self.sensor_max[0], 
-                #     #                            num_state = self.hyperparam[3])
-                    
-                #     # # if to_no_go_zone and real_st <= self.hyperparam[3]//2:
-                #     # #     desired_state=self.hyperparam[3]
-                #     # # elif to_no_go_zone and real_st < self.hyperparam[3]//2:
-                #     # #     desired_state=0
-                #     # # elif not to_no_go_zone and real_st >= self.hyperparam[3]//2:
-                #     # #     desired_state=0
-                #     # # else:
-                #     # #     desired_state=hyperparam[3]
-                    
-                #     # # r = self.puntual_reward(real_state=real_st, desired_state=self.hyperparam[3]//2, 
-                #     # #                         num_states = self.hyperparam[3])
-                #     print("Tacking")
-                # else:
-                    
-                #     real_st = self.real_action(real_value=heading, 
-                #                                desired_value = objective, 
-                #                                min_value = self.sensor_min[0], 
-                #                                max_value = self.sensor_max[0], 
-                #                                num_state = self.hyperparam[3])
-                
+                                           num_state = self.hyperparam[3])            
             else:
                               
                 real_st = self.real_action(real_value=self.prev_angle, 
@@ -153,8 +105,6 @@ class sailboat_environment:
             self.rewards[k] = self.puntual_reward(real_state=real_st, desired_state=self.hyperparam[3+5*k]//2, 
                                                   num_states = self.hyperparam[3+5*k])
                 
-                               
-    
     def normalize(self,data,vmax,vmin, A=1, B=0):
         fn=[]
         for i in range(len(data)):
@@ -169,12 +119,16 @@ class sailboat_environment:
     
     def carril_velero(self,ro,r,w):
         
+        const = 6
         self.m = (r[1]-ro[1])/(r[0]-ro[0])
         self.theta = np.arctan2(r[1]-ro[1], r[0]-ro[0])
         if(np.abs(self.theta)>np.pi/2):
             self.theta+=-np.pi*self.theta/np.abs(self.theta)
-        self.b1 = r[1]-self.m*r[0]+0.5*(w+4*self.tack)*(np.cos(self.theta)+self.m*np.sin(self.theta))
-        self.b2 = r[1]-self.m*r[0]-0.5*(w+4*self.tack)*(np.cos(self.theta)+self.m*np.sin(self.theta))
+        self.b1 = r[1]-self.m*r[0]+0.5*(w+const*self.tack)*(np.cos(self.theta)+self.m*np.sin(self.theta))
+        self.b2 = r[1]-self.m*r[0]-0.5*(w+const*self.tack)*(np.cos(self.theta)+self.m*np.sin(self.theta))
+        print(self.m)
+        print(self.b1)
+        print(self.b2)
         
     def is_restart(self,r,control_action):
         if r[1]<=self.m*r[0]+self.b1 and r[1]>=self.m*r[0]+self.b2:
@@ -246,10 +200,9 @@ class sailboat_environment:
                 else:
                     self.tack = False
                     n3 = 0
-                    print("no tack")
                     
                 err_ang = self.angle_saturation(ang=self.desired_heading - actual_heading, 
-                                                min_ang=-180, 
+                                                min_ang=-180,
                                                 max_ang=180)
                  
                 if abs(err_ang)>=self.sensor_max[0]:
@@ -332,7 +285,9 @@ class sailboat_environment:
         self.prev_sail_objective = self.sail_aproximation(prev_yaw=data[5])
         control_action[1] = self.prev_sail_objective
         control_action[2] = self.restart
-
+        self.save_SNN_state()
+        print(self.actual_speed)
+        
         return control_action
             
     def is_finish(self):
@@ -343,9 +298,9 @@ class sailboat_environment:
         return final
     
     def save_SNN_state(self):
-        if(self.restart==1):
+        if(self.restart==1 and not self.tack):
             self.state += 1
-        if self.saving < self.state:
+        if (self.saving < self.state and not self.tack) or (self.tack and self.restart==1):
             for i in range(len(self.controllers)):
                 self.controllers[i].save_SNN(self.path)
             self.saving +=1
@@ -386,8 +341,6 @@ class sailboat_environment:
                                                           max_ang=180)
 
         l = (self.tack_angle_logic [1] > 0 and self.tack_angle_logic [0] <= 0) or (self.tack_angle_logic [1] < 0 and self.tack_angle_logic [0] >= 0)
-        
-        
         if l and v:
             self.tack_sign = True
         if h == 0:
