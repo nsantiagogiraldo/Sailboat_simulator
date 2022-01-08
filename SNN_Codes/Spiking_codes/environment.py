@@ -34,7 +34,7 @@ class sailboat_environment:
     tack_direction = -1
     desired_heading = 0
     tack_sign = False
-    tack_angle_logic = [0,0]
+    tack_angle_logic = [-1000,-1000]
     
     def __init__(self, rudder_ctrl, sail_ctrl, vmax, vmin, hyperparam, path, learning = True):
         self.controllers.append(rudder_ctrl)
@@ -82,7 +82,8 @@ class sailboat_environment:
             # ]
             self.waypoints=[
                 [240.0, 100.0, 0.0], 
-                [270.0, 95.0, 0.0]
+                #[270.0, 95.0, 0.0]
+                [268.0, 67.0, 0.0]
             ]
     def reward(self, data):
         
@@ -104,6 +105,7 @@ class sailboat_environment:
                 
             self.rewards[k] = self.puntual_reward(real_state=real_st, desired_state=self.hyperparam[3+5*k]//2, 
                                                   num_states = self.hyperparam[3+5*k])
+            self.rewards[k] = 0
                 
     def normalize(self,data,vmax,vmin, A=1, B=0):
         fn=[]
@@ -119,7 +121,7 @@ class sailboat_environment:
     
     def carril_velero(self,ro,r,w):
         
-        const = 6
+        const = 8
         self.m = (r[1]-ro[1])/(r[0]-ro[0])
         self.theta = np.arctan2(r[1]-ro[1], r[0]-ro[0])
         if(np.abs(self.theta)>np.pi/2):
@@ -157,7 +159,9 @@ class sailboat_environment:
         self.n_data = []
         
         actual_heading = data[5] 
-        real_wind_angle = data[6] + actual_heading
+        real_wind_angle = self.angle_saturation(ang = data[6] + actual_heading, 
+                                             min_ang=-180, 
+                                             max_ang=180)
         self.actual_speed = np.sqrt(data[7]**2+data[8]**2)
         
         for i in range(len(self.controllers)):
@@ -275,6 +279,7 @@ class sailboat_environment:
         
         control_action = [0,0,0]
         self.control_inputs(data = data, max_rate = max_rate, min_rate = min_rate)
+        self.save_SNN_state()
         self.calculate_reward(data = data)
         for i in range(len(self.controllers)):
             control_action[i] = int(self.controllers[i].train_episode(n_data = self.n_data[i],
@@ -285,8 +290,7 @@ class sailboat_environment:
         self.prev_sail_objective = self.sail_aproximation(prev_yaw=data[5])
         control_action[1] = self.prev_sail_objective
         control_action[2] = self.restart
-        self.save_SNN_state()
-        print(self.actual_speed)
+        print(self.desired_heading)
         
         return control_action
             
@@ -307,9 +311,10 @@ class sailboat_environment:
     
     def aparent_wind(self, real_wind_angle, sailboat_speed, yaw):
         
-        i = sailboat_speed
+        i = sailboat_speed/np.sqrt(18)
         theta = np.arctan2(np.sin(np.pi*real_wind_angle/180)-i*np.sin(np.pi*yaw/180),
                            np.cos(real_wind_angle)-i*np.cos(yaw))
+        
         return 180*theta/np.pi
     
     def sail_aproximation(self, prev_yaw):
@@ -320,7 +325,6 @@ class sailboat_environment:
         theta[0] = theta_sail - prev_yaw
         theta[1] = theta[0] + 180
         opt_theta = 0
-        
         for theta_sail in theta:
             alpha = self.angle_saturation(ang=theta_sail,
                                           min_ang=-180,
@@ -335,7 +339,7 @@ class sailboat_environment:
         h = self.angle_saturation(ang = heading_angle-real_wind, 
                                   min_ang=-180, 
                                   max_ang=180)
-        v = self.tack_angle_logic [1] != 0 or self.tack_angle_logic [0] != 0
+        v =  self.tack_angle_logic [0] != -1000 #Reset at change of desired point
         self.tack_angle_logic [1] = self.angle_saturation(ang = self.desired_heading - real_wind, 
                                                           min_ang=-180, 
                                                           max_ang=180)
@@ -351,6 +355,8 @@ class sailboat_environment:
                                   max_ang=180)
         if not self.tack:
             self.tack_direction = h/np.abs(h)
+            self.tack_sign = (l>0 and self.tack_angle_logic [1] > 0) or (l<0 and self.tack_angle_logic [1] < 0)
+            print(self.tack_sign)
         elif self.actual_speed > self.hyperparam[12] and l<tack_angle+30 and l>tack_angle-30 and self.tack_sign:
             self.restart = 1
             self.tack_direction *= -1

@@ -13,8 +13,8 @@ p = sp.serial_port(direction, port_name, timeout)
 # Sensor ranges
 vmax=[45, 30, 30, 180]
 vmin=[-45, -30, -30, -180]
-AM=[25,90]
-Am=[-25,-90]
+AM=[30,90]
+Am=[-30,-90]
 # Size step of algorithm
 PMax = 10
 Pmin = 0
@@ -24,7 +24,7 @@ time_network=500
 # Network characteristics and connections
 hyperparam = [12,1,180,7,30,
               70,4,30,17,275,
-              100,10,0.48,45]  #K1,K2,tacking area 1, exit states number, tacking area 2, tacking angle, channel length, K3, exit states sail, xcenter_train, ycenter_train, number_of_training_points, max_speed_tacking,tacking angle 2
+              100,10,0.4,45]  #K1,K2,tacking area 1, exit states number, tacking area 2, tacking angle, channel length, K3, exit states sail, xcenter_train, ycenter_train, number_of_training_points, max_speed_tacking,tacking angle 2
 files_names = ['rudder1', 'sail1']
 dt=1
 control_signals=[hyperparam[0]*hyperparam[1],3*hyperparam[7]]
