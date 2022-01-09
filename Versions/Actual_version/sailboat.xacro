@@ -6,14 +6,14 @@
     <xacro:arg name="waterType" default="global" />
     <xacro:property name="windType" value="$(arg windType)" />
     <xacro:property name="waterType" value="$(arg waterType)" />
-    <xacro:property name="scale_V1X" value="0.244"/>
-    <xacro:property name="scale_V1Y" value="0.5"/>
-    <xacro:property name="scale_V1Z" value="0.537"/>
-    <xacro:property name="scale_V2X" value="0.244"/>
-    <xacro:property name="scale_V2Y" value="0.5"/>
-    <xacro:property name="scale_V2Z" value="0.4"/>
+    <xacro:property name="scale_V1X" value="0.325"/>
+    <xacro:property name="scale_V1Y" value="0.325"/>
+    <xacro:property name="scale_V1Z" value="0.637"/>
+    <xacro:property name="scale_V2X" value="0.335"/>
+    <xacro:property name="scale_V2Y" value="0.335"/>
+    <xacro:property name="scale_V2Z" value="0.51"/>
     <xacro:property name="Angle_Sail2" value="3"/>
-    <xacro:property name="SailXo" value="0.16"/>
+    <xacro:property name="SailXo" value="0"/>
     <xacro:property name="SailYo" value="0"/>
     <xacro:property name="SailZo" value="-0.041"/>
     <xacro:property name="windType" value="global"/>
@@ -63,7 +63,7 @@
     </joint>
 <!-- ******************************************************************************************* -->
  <!-- Vela2 -->
-    <link name="sail1">
+    <link name="sail_2">
 		<inertial>
 		    	<origin rpy="0 0 ${Angle_Sail2}" xyz="-0.3 0 0.4"/>
 			<mass value="1" />
@@ -94,9 +94,9 @@
     </link>
 
 
-    <joint name="sail_joint1" type="revolute">
+    <joint name="sail_joint_2" type="revolute">
         <parent link="base_link"/>
-        <child link="sail1"/>
+        <child link="sail_2"/>
         <origin rpy="0 0 0" xyz="${SailXo} ${SailYo} ${SailZo+0.044}"/>
 <!-- valores originales 0.2, 0 ,0.1-->
         <dynamics damping="1.0"/>
@@ -166,6 +166,25 @@
 		<fluidVelocity>${windType}</fluidVelocity>
       </plugin>
       
+	<plugin name="usv_sail_plugin" filename="libfoil_dynamics_plugin.so">
+		<link_type>sail</link_type>
+		<a0>0</a0>
+		<cla>3.0</cla>
+		<cda>3.0</cda>
+		<cma>-1.8</cma>
+		<alpha_stall>0.785</alpha_stall>
+		<cla_stall>-3.85</cla_stall>
+		<cda_stall>-0.9233984055</cda_stall>
+		<cma_stall>0</cma_stall>
+		<cp>0 0 0</cp>
+		<joint_name>sail_joint_2</joint_name>
+		<area>1.44</area>
+		<fluid_density>1.2041</fluid_density>
+		<forward>-1 0 0</forward>
+		<upward>0 1 0</upward>
+		<link_name>sail_2</link_name>
+		<fluidVelocity>${windType}</fluidVelocity>
+      </plugin>
   
       <plugin name="usv_sail_plugin" filename="libfoil_dynamics_plugin.so">
 		  <link_type>keel</link_type>

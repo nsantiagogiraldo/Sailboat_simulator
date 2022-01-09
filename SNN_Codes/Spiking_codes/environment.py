@@ -277,19 +277,20 @@ class sailboat_environment:
             
     def environment_step(self, data, max_rate, min_rate):
         
-        control_action = [0,0,0]
+        control_action = [0,0,0,0]
         self.control_inputs(data = data, max_rate = max_rate, min_rate = min_rate)
         self.save_SNN_state()
         self.calculate_reward(data = data)
         for i in range(len(self.controllers)):
             control_action[i] = int(self.controllers[i].train_episode(n_data = self.n_data[i],
                                                                       reward = self.rewards[i]))
-        control_action[2] = self.is_finish()   
-        self.is_restart([data[1],data[2]], control_action[2])
+        control_action[3] = self.is_finish()   
+        self.is_restart([data[1],data[2]], control_action[3])
         self.prev_angle = control_action[1]
         self.prev_sail_objective = self.sail_aproximation(prev_yaw=data[5])
         control_action[1] = self.prev_sail_objective
-        control_action[2] = self.restart
+        control_action[2] = self.prev_sail_objective
+        control_action[3] = self.restart
         print(self.desired_heading)
         
         return control_action

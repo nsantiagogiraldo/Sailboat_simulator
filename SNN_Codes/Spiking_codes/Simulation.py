@@ -39,7 +39,8 @@ class serial_port:
     def write_control_action(self,control_action):
         band=False
         if self.j:
-            datos={'A1' : control_action[0], 'A2' : control_action[1], 'A3' : control_action[2]}
+            datos={'A1' : control_action[0], 'A2' : control_action[1], 
+                   'A3' : control_action[2], 'A4' : control_action[3]}
             band=cm.write_data(datos)
 
         return band
