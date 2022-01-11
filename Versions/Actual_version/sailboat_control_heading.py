@@ -54,7 +54,8 @@ def talker_ctrl():
     rospy.init_node('usv_simple_ctrl', anonymous=True)
     rate = rospy.Rate(rate_value) # 10Hz
     # publishes to thruster and rudder topics
-    pub_sail = rospy.Publisher('angleLimits', Float64, queue_size=10)
+    pub_sail = rospy.Publisher('sail/angleLimits', Float64, queue_size=10)
+    #pub_sail_2 = rospy.Publisher('sail_2/angleLimits', Float64, queue_size=10)
     pub_rudder = rospy.Publisher('joint_setpoint', JointState, queue_size=10)
     pub_result = rospy.Publisher('move_usv/result', Float64, queue_size=10)
     pub_heading = rospy.Publisher('currentHeading', Float64, queue_size=10)
@@ -71,6 +72,7 @@ def talker_ctrl():
 	    final = rudder_ctrl_msg()
             pub_rudder.publish(final[0])
 	    pub_sail.publish(final[1])
+            #pub_sail_2.publish(final[2])
             pub_result.publish(result)
             pub_heading.publish(currentHeading)
             pub_windDir.publish(windDir)
@@ -101,6 +103,7 @@ def controller():
     timeout=15
     rudder_angle=0
     sail_angle = 1
+    sail_angle_2 = 1
     result_py3=0
     # Position(set up and GPS) and odometry sensors processing and aconditioning
 
@@ -145,9 +148,10 @@ def controller():
         else:
             [band,recibe] = cm.read_data()
 	    if band: 
-                result_py3=recibe['A3']
+                result_py3=recibe['A4']
                 rudder_angle=recibe['A1']
                 sail_angle=recibe['A2']
+                sail_angle_2=recibe['A3']
 		if result_py3 == 2:
 		    reset_world()
 	            result_py3=0
@@ -160,17 +164,17 @@ def controller():
     result.data = int(result_py3)
     #############################################  
     #Timon y vela
-    return math.radians(rudder_angle),math.radians(sail_angle)
+    return math.radians(rudder_angle),math.radians(sail_angle),math.radians(sail_angle_2)
 
 def rudder_ctrl_msg():
     msg = JointState()
     msg.header = Header()
-    msg.name = ['rudder_joint', 'sail_joint']
+    msg.name = ['rudder_joint', 'sail_joint', 'sail_joint_2']
     res = controller()
-    msg.position = [res[0], res[1]]
+    msg.position = [res[0], res[1], res[2]]
     msg.velocity = []
     msg.effort = []
-    return msg,res[1]
+    return msg,res[1],res[2]
 
 if __name__ == '__main__':
 
