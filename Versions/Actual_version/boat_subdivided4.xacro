@@ -13,8 +13,8 @@
     <xacro:property name="back_water_displaced_mass" value="40"/>
     <xacro:property name="middle_water_displaced_mass" value="40"/>
     <xacro:property name="front_water_displaced_mass" value="25"/>
-    <xacro:property name="scalex" value=".19"/>
-    <xacro:property name="scaley" value=".085"/>
+    <xacro:property name="scalex" value=".193"/>
+    <xacro:property name="scaley" value=".117"/>
     <xacro:property name="scalez" value=".1"/>
     <xacro:property name="bl1" value=".1" />
     <xacro:property name="bl2" value=".1" />
@@ -397,18 +397,18 @@
 
             <collision name="collision">
                 <geometry>
-                  <box size="${0.2*scalex} ${0.02*scaley} ${0.3*scalez}" />
+                  <box size="${0.05} ${0.005} ${0.142}" />
                 </geometry>
-                <origin rpy="0 0 0" xyz="${-0.1*scalex} 0 0"/>
+                <origin rpy="0 0 0" xyz="0 0 0"/>
             </collision>
 
             <visual name="visual">
                 <geometry>
                 
-                  <mesh filename="package://usv_sim/meshes/simpleHull3/box.dae" scale="${0.2*scalex} ${0.02*scaley} ${0.3*scalez}"/>
+                  <mesh filename="package://usv_sim/meshes/simpleHull3/box.dae" scale="${0.05} ${0.005} ${0.142}"/>
                   
                 </geometry>
-                <origin rpy="0 0 0" xyz="${-0.1*scalex} 0 0"/>
+                <origin rpy="0 0 0" xyz="0 0 0"/>
                 
             </visual>
 
@@ -417,7 +417,7 @@
         <joint name="rudder_joint" type="revolute">
             <parent link="back_r_link"/>
             <child link="rudder"/>
-            <origin rpy="0 0 0" xyz="${-1.4*scalex} ${0.39*scaley} ${-0.5*scalez}"/>
+            <origin rpy="0 0 0" xyz="-0.2 0 -0.12"/>
             <dynamics damping="1.0"/>
             <axis xyz="0 0 1"/>
             <limit effort="100" velocity="5" lower="-${PI/2}" upper="${PI/2}" />
@@ -436,16 +436,16 @@
 
     <link name="hokuyo_link">
         <collision name="collision">
-	        <origin xyz="0 0 0" rpy="0 0 0"/>
+	        <origin xyz="-0.45 0 -0.15" rpy="0 0 0"/>
 	        <geometry>
-	        	<box size="0.1 0.1 0.1"/>
+	        	<box size="0.05 0.05 0.05"/>
 	        </geometry>
         </collision>
 
         <visual name="visual">
-        	<origin xyz="0 0 0" rpy="0 0 0"/>
+        	<origin xyz="-0.45 0 -0.15" rpy="0 0 0"/>
         	<geometry>
-        		<mesh filename="package://usv_sim/meshes/simpleHull3/box.dae" scale="0.1 0.1 0.1"/>
+        		<mesh filename="package://usv_sim/meshes/simpleHull3/box.dae" scale="0.05 0.05 0.05"/>
         		
         	</geometry>
         	
