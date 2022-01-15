@@ -3,16 +3,16 @@ import SNN_network as SNN
 import environment as env
 
 Inference = False
-
+test = False
 # Serial port
 port_name='interface_1'
 direction = '/home/nelson/Documentos/Ubuntu_master/SNN_Codes/Spiking_codes'
 timeout=15  
 p = sp.serial_port(direction, port_name, timeout)
 
-# Sensor ranges
-vmax=[45, 30, 30, 180]
-vmin=[-45, -30, -30, -180]
+# Sensor and error ranges
+vmax=[45, 45, 30]
+vmin=[-45, -45, -30]
 AM=[30,90]
 Am=[-30,-90]
 # Size step of algorithm
@@ -22,20 +22,20 @@ step = 1e-0
 # Simulation and control times
 time_network=500
 # Network characteristics and connections
-hyperparam = [12,1,180,7,30,
-              70,4,30,17,275,
-              100,10,0.4,45,
-              10,10,3]  #K1,K2,tacking area 1, exit states number, tacking area 2, tacking angle, channel length, K3, exit states sail, xcenter_train, ycenter_train, number_of_test_points, max_speed_tacking,tacking angle 2, train_points_1, train_points_2, train_points_3
-files_names = ['rudder1', 'sail1']
+hyperparam = [12,1,180,7,30, #K1,K2,tacking area 1, exit states number, tacking area 2
+              70,4,30,17,275, #tacking angle, channel length, K3, exit states sail, xcenter_train
+              100,10,0.4,45, #ycenter_train, number_of_test_points, max_speed_tacking,tacking angle 2
+              10,10,3]  # train_points_1, train_points_2, train_points_3
+files_names = ['rudder_0', 'sail_0']
 dt=1
-control_signals=[hyperparam[0]*hyperparam[1],3*hyperparam[7]]
+control_signals=[hyperparam[0]*hyperparam[1],2*hyperparam[7]]
 number_actuators=1
 min_freq=0
 max_freq=240
 codify = 'poisson'
 redundance = [2,2]
 recurrent = [0,0]
-neur = [[3*control_signals[0]*redundance[0],number_actuators],
+neur = [[control_signals[0]*redundance[0],number_actuators],
        [control_signals[1]*redundance[1],number_actuators]]
 
 if not Inference:
@@ -69,8 +69,8 @@ if not Inference:
                              maximum = max_freq, minimun = min_freq)
     else:
         
-        rudder_ctrl.load_SNN(path=direction,learning = True)
-        sails_ctrl.load_SNN(path=direction,learning = True)
+        rudder_ctrl.load_SNN(path=direction,learning = not test)
+        sails_ctrl.load_SNN(path=direction,learning = not test)
         
     sail_env = env.sailboat_environment(rudder_ctrl = rudder_ctrl, sail_ctrl = sails_ctrl,
                                         vmax = vmax, vmin = vmin, hyperparam = hyperparam, 
@@ -79,7 +79,7 @@ if not Inference:
     #SNN controller
     band=False
     
-    while True:
+    while sail_env.scenario <= 2:
         if not band:
             band=p.open_port()
         else:
@@ -87,7 +87,7 @@ if not Inference:
             if not isinstance(data,bool):
                 control_action = sail_env.environment_step(data = data, max_rate = max_freq,
                                                            min_rate = min_freq)
-                p.write_control_action(control_action)            
+                p.write_control_action(control_action)
                 #rudder_ctrl.print_weigths(im=None)
             else:
                 print("No data")

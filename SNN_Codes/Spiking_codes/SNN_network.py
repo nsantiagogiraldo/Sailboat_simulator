@@ -300,6 +300,8 @@ class spiking_neuron:
             a = self.normalize(data=[h[i]], vmax=[spikes[0]-2], vmin=[spikes[1]+2], A=self.max_out, B=self.min_out)
             k = (self.max_out-self.min_out)/self.out_states
             state = int((a[0]+self.max_out)/k)
+            if state>=self.out_states:
+                state = self.out_states-1
             a[0] = int(((2*state+1)*k+2*self.min_out)//2)
             actions = actions+a
             
@@ -309,7 +311,7 @@ class spiking_neuron:
         
         cod_n_dato = self.SNN_encoding(n_data, self.redundance)
         self.spiking_controller.run(inputs={self.layers[0] : cod_n_dato}, time=self.time_network, reward=reward)
-        self.print_spikes(spike_ims=None, spike_axes=None)
+        #self.print_spikes(spike_ims=None, spike_axes=None)
         control_action=self.decode_spikes()
         
         return control_action
