@@ -3,7 +3,7 @@ import SNN_network as SNN
 import environment as env
 
 Inference = False
-test = False
+test = True
 # Serial port
 port_name='interface_1'
 direction = '/home/nelson/Documentos/Ubuntu_master/SNN_Codes/Spiking_codes'
@@ -23,7 +23,7 @@ step = 1e-0
 time_network=500
 # Network characteristics and connections
 hyperparam = [12,1,180,7,30, #K1,K2,tacking area 1, exit states number, tacking area 2
-              70,4,30,17,275, #tacking angle, channel length, K3, exit states sail, xcenter_train
+              70,4,30,17,255, #tacking angle, channel length, K3, exit states sail, xcenter_train
               100,10,0.4,45, #ycenter_train, number_of_test_points, max_speed_tacking,tacking angle 2
               10,10,3]  # train_points_1, train_points_2, train_points_3
 files_names = ['rudder_0', 'sail_0']
@@ -74,7 +74,7 @@ if not Inference:
         
     sail_env = env.sailboat_environment(rudder_ctrl = rudder_ctrl, sail_ctrl = sails_ctrl,
                                         vmax = vmax, vmin = vmin, hyperparam = hyperparam, 
-                                        path = direction)
+                                        path = direction, learning = not test)
     
     #SNN controller
     band=False
@@ -85,9 +85,13 @@ if not Inference:
         else:
             data=p.read_data_sensor()
             if not isinstance(data,bool):
-                control_action = sail_env.environment_step(data = data, max_rate = max_freq,
-                                                           min_rate = min_freq)
+                if not test:
+                    control_action = sail_env.environment_step(data = data, max_rate = max_freq,
+                                                               min_rate = min_freq)
+                else:
+                    control_action = sail_env.environment_test(data = data, max_rate = max_freq,
+                                                               min_rate = min_freq)
                 p.write_control_action(control_action)
-                #rudder_ctrl.print_weigths(im=None)
+                rudder_ctrl.print_weigths(im=None)
             else:
                 print("No data")

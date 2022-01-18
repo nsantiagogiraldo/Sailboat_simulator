@@ -9,7 +9,7 @@ Created on Thu Jan  6 15:43:54 2022
 import matplotlib.pyplot as plt
 import numpy as np
 
-x = np.arange(0,10,0.1)
+x = np.arange(200,280,0.1)
 
 while True:
     

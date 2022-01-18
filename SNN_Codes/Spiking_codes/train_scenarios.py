@@ -14,15 +14,14 @@ class train_test_scenarios:
     waypoints = []
     learning =  True
     number_train = 0
-    scenario = 1
+    scenario = 0
     controllers = []
+    min_distance = 2
     
     def train_scenario(self, test = False):
         self.waypoints = []
         
         if test:
-            self.controllers[0].spiking_controller.learning = False
-            self.controllers[1].spiking_controller.learning = False
             center = [0,0]
             center [0] = self.hyperparam[9]
             center [1] = self.hyperparam[10]
@@ -36,6 +35,33 @@ class train_test_scenarios:
                 y = int(r*np.sin(theta)+center[1])
                 self.waypoints.append([x,y,0])
             
+            # self.waypoints=[
+            #     [240.0, 100.0, 0],
+            #     [255.0, 95.0, 0], #(255.0, 100.0, 0.0)
+            #     [260.0, 105.0, 0], #(260.0, 105.0, 0.0)
+            #     [265.0, 100.0, 0], #(265.0, 100.0, 0.0)
+            #     [270.0, 95.0, 0], #(270.0, 95.0, 0.0)
+            #     [275.0, 100.0, 0],
+            #     [270.0, 105.0, 0],
+            #     [265.0, 100.0, 0],
+            #     [260.0, 95.0, 0],
+            #     [255.0, 100.0, 0],
+            #     [250.0, 105.0, 0],
+            #     [245.0, 100.0, 0],
+            #     [240.0, 100.0, 0]
+            # ]
+            
+           # self.waypoints=[
+           #      [240.0, 100.0, 0],
+           #      [275.0, 100.0, 0],
+           #      [240.0, 100.0, 0]
+           #  ]
+            # self.waypoints=[
+            #     [240.0, 100.0, 0.0],
+            #     #[270.0, 95.0, 0.0]
+            #     [268.0, 67.0, 0.0]
+            # ]
+
         elif self.scenario == 0:
             center = self.initial_point
             n = self.hyperparam[14]
@@ -47,49 +73,16 @@ class train_test_scenarios:
                 y = int(r*np.sin(theta)+center[1])
                 self.waypoints.append([x,y,0])
                 theta -= np.pi/(n-1)
-                
-            # self.waypoints=[
-            #     [240.0, 100.0, 0.0],
-            #     [255.0, 95.0, 0.0], #(255.0, 100.0, 0.0)
-            #     [260.0, 105.0, 0.0], #(260.0, 105.0, 0.0)
-            #     [265.0, 100.0, 0.0], #(265.0, 100.0, 0.0)
-            #     [270.0, 95.0, 0.0], #(270.0, 95.0, 0.0)
-            #     [275.0, 100.0, 0.0],
-            #     [270.0, 105.0, 0.0],
-            #     [265.0, 100.0, 0.0],
-            #     [260.0, 95.0, 0.0],
-            #     [255.0, 100.0, 0.0],
-            #     [250.0, 105.0, 0.0],
-            #     [245.0, 100.0, 0.0],
-            #     [240.0, 100.0, 0.0]
-            # ]
-            # self.waypoints=[
-            #     [240.0, 100.0, 0.0],
-            #     #[270.0, 95.0, 0.0]
-            #     [268.0, 67.0, 0.0]
-            # ]
-        elif self.scenario == 2:
-            center = self.initial_point
-            n = self.hyperparam[14]
-            theta=np.pi/2
-            r = 30
-            #self.controllers[0].spiking_controller.learning = False
-            
-            for i in range(n):           
-                x = int(r*np.cos(theta)+center[0])
-                y = int(r*np.sin(theta)+center[1])
-                self.waypoints.append([x,y,1])
-                theta += np.pi/(n-1)
-                
-            
-        else:
+ 
+        elif self.scenario == 1:
             center = self.initial_point # Turn the wind to
             n = self.hyperparam[16]
             theta=np.pi/2
-            r = 20
+            r = 25
             #self.controllers[0].spiking_controller.learning = False
             self.hyperparam[2] = 180
-            self.hyperparam[4] = 180
+            self.hyperparam[4] = 0
+            self.min_distance = 4
             
             for i in range(n):        
                 
@@ -97,7 +90,23 @@ class train_test_scenarios:
                 x = int(r*np.cos(theta)+center[0])
                 y = int(r*np.sin(theta)+center[1])
                 self.waypoints.append([x,y,0])
+                
+        elif self.scenario == 2:
+            center = self.initial_point
+            n = self.hyperparam[14]
+            theta=np.pi/2
+            r = 30
+            self.min_distance = 2
+            self.hyperparam[2] = 0
+            self.hyperparam[6] += 4
+            self.controllers[0].spiking_controller.learning = False
             
+            for i in range(n):           
+                x = int(r*np.cos(theta)+center[0])
+                y = int(r*np.sin(theta)+center[1])
+                self.waypoints.append([x,y,1])
+                theta += np.pi/(n-1)
+                
         self.number_train = n
         np.random.shuffle(self.waypoints)
         self.waypoints.insert(0, self.initial_point)
