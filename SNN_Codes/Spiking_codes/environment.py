@@ -40,8 +40,6 @@ class sailboat_environment(ts.train_test_scenarios):
         self.sensor_max = vmax
         self.sensor_min = vmin
         self.hyperparam = hyperparam
-        self.hyperparam[2] = 0
-        self.hyperparam[4] = 0
         self.path = path
         self.learning = learning
         self.train_scenario(test = not learning)      
@@ -86,11 +84,11 @@ class sailboat_environment(ts.train_test_scenarios):
         if x==0:
             x=0.001
         self.m = (r[1]-ro[1])/x
-        self.theta = np.arctan2(r[1]-ro[1], x)
-        if(np.abs(self.theta)>np.pi/2):
-            self.theta+=-np.pi*self.theta/np.abs(self.theta)
-        self.b1 = r[1]-self.m*r[0]+0.5*(w+const*self.tack)*(np.cos(self.theta)+self.m*np.sin(self.theta))
-        self.b2 = r[1]-self.m*r[0]-0.5*(w+const*self.tack)*(np.cos(self.theta)+self.m*np.sin(self.theta))
+        self.theta = np.arctan((r[1]-ro[1])/x)
+        k = np.abs(0.5*(w+const*self.tack)/np.cos(self.theta))
+        self.b1 = r[1]-self.m*r[0]+k
+        self.b2 = r[1]-self.m*r[0]-k
+        print (self.m,self.b1,self.b2)
         
     def is_restart(self,r,control_action):
         if r[1]<=self.m*r[0]+self.b1 and r[1]>=self.m*r[0]+self.b2:
@@ -158,47 +156,28 @@ class sailboat_environment(ts.train_test_scenarios):
         else:        
             self.reward(data=data)
             
-    def environment_step(self, data, max_rate, min_rate):
-        
-        control_action = [0,0,0,0]
-        self.save_SNN_state()
-        self.control_inputs(data = data, max_rate = max_rate, min_rate = min_rate)
-        self.calculate_reward(data = data)
-        for i in range(len(self.controllers)):
-            control_action[i] = int(self.controllers[i].train_episode(n_data = self.n_data[i],
-                                                                      reward = self.rewards[i]))
-        control_action[3] = self.is_finish()
-        self.is_restart([data[1],data[2]], control_action[3])
-        self.prev_angle = control_action[1]
-        self.prev_sail_objective = self.sail_aproximation(prev_yaw=data[5])
-        #control_action[1] = self.prev_sail_objective
-        control_action[2] = control_action[1]
-        control_action[3] = cp.copy(self.restart)
-        if self.restart == 1 or self.restart == 2:
-            control_action[3] = 2
-        return control_action
-            
     def is_finish(self):
-        if self.distance<2:
+        if self.distance<self.min_distance:
             final = 1
         else:
             final = 0
         return final
     
     def save_SNN_state(self):
-        if(self.restart==1 and not self.tack):
+        if(self.restart==1):
             self.state += 1
         # if (self.saving < self.state and not self.tack) or (self.tack and self.restart==1):
         #     for i in range(len(self.controllers)):
         #         self.controllers[i].save_SNN(self.path)
         #     self.saving +=1
         if self.state == self.number_train:
+            self.controllers[1].network_name += str(self.scenario)
             for i in range(len(self.controllers)):
                 self.controllers[i].save_SNN(self.path)
             self.state = 0
             self.scenario += 1
             self.train_scenario()
-            self.controllers[1].network_name += str(self.scenario)
+            
             
     def aparent_wind(self, real_wind_angle, sailboat_speed, yaw):
         
@@ -266,6 +245,43 @@ class sailboat_environment(ts.train_test_scenarios):
             else:
                 ang -= complete
         return ang
+
+    def environment_step(self, data, max_rate, min_rate):
+        
+        control_action = [0,0,0,0]
+        self.save_SNN_state()
+        self.control_inputs(data = data, max_rate = max_rate, min_rate = min_rate)
+        self.calculate_reward(data = data)
+        for i in range(len(self.controllers)):
+            control_action[i] = int(self.controllers[i].train_episode(n_data = self.n_data[i],
+                                                                      reward = self.rewards[i]))
+        control_action[3] = self.is_finish()
+        self.is_restart([data[1],data[2]], control_action[3])
+        self.prev_angle = control_action[1]
+        self.prev_sail_objective = self.sail_aproximation(prev_yaw=data[5])
+        #control_action[1] = self.prev_sail_objective
+        control_action[2] = control_action[1]
+        control_action[3] = cp.copy(self.restart)
+        if self.restart == 1 or self.restart == 2:
+            control_action[3] = 2
+        return control_action  
+    
+    def environment_test(self, data, max_rate, min_rate):
+        control_action = [0,0,0,0]
+        if(self.restart==1):
+            self.state += 1
+            self.tack_angle_logic [0] = -1000
+            self.tack_angle_logic [1] = -1000
+            self.tack = False
+        self.control_inputs(data = data, max_rate = max_rate, min_rate = min_rate)
+        for i in range(len(self.controllers)):
+            control_action[i] = int(self.controllers[i].train_episode(n_data = self.n_data[i],
+                                                                      reward = self.rewards[i]))
+        control_action[3] = self.is_finish()
+        self.restart = cp.copy(control_action[3])
+        control_action[2] = control_action[1]
+        print(self.waypoints[self.state+1])
+        return control_action
     
     def control_inputs(self, data, max_rate, min_rate):
         self.distance = np.sqrt((data[1]-self.waypoints[self.state+1][0])**2+(data[2]-self.waypoints[self.state+1][1])**2)
@@ -273,8 +289,8 @@ class sailboat_environment(ts.train_test_scenarios):
         
         actual_heading = data[5] 
         real_wind_angle = self.angle_saturation(ang = data[6] + actual_heading, 
-                                             min_ang=-180, 
-                                             max_ang=180)
+                                                min_ang=-180, 
+                                                max_ang=180)
         self.actual_speed = np.sqrt(data[7]**2+data[8]**2)
         print(self.actual_speed)
         for i in range(len(self.controllers)):
@@ -291,8 +307,8 @@ class sailboat_environment(ts.train_test_scenarios):
                 
                 to_tacking_zone_UW =  180-self.hyperparam[2]*0.5<alpha or 0.5*self.hyperparam[2]-180>alpha
                 obj_is_tacking_UW =  180-self.hyperparam[2]*0.5<beta or 0.5*self.hyperparam[2]-180>beta 
-                to_tacking_zone_TW =  alpha<self.hyperparam[2]/2 and alpha>-self.hyperparam[2]/2
-                obj_is_tacking_TW = beta<self.hyperparam[2]/2 and beta>-self.hyperparam[2]/2
+                to_tacking_zone_TW =  alpha<self.hyperparam[4]/2 and alpha>-self.hyperparam[4]/2
+                obj_is_tacking_TW = beta<self.hyperparam[4]/2 and beta>-self.hyperparam[4]/2
                 
                 if  to_tacking_zone_UW and obj_is_tacking_UW:                   
                     n3 = self.refresh_tack_direction(heading_angle = actual_heading, 
