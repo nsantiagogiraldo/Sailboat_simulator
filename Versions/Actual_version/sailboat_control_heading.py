@@ -5,6 +5,7 @@ import rospy
 import math
 import tf
 import communicate as cm
+import text_file as db
 from sensor_msgs.msg import JointState
 from std_msgs.msg import Header
 from nav_msgs.msg import Odometry
@@ -15,7 +16,8 @@ from std_srvs.srv import Empty
 
 initial_pose = Odometry()
 target_pose = Odometry()
-rate_value = 1
+rate_value = 2   # Period of saving data
+control_rate = 1 # Period of the controller (1/control_time)
 result = Float64()
 result.data = 0
 windDir= Float64()
@@ -27,6 +29,10 @@ heeling = 0
 spHeading = 10 
 isTacking = 0
 reset_world = 0
+save_data = True
+counter = 0
+time_counter = 0
+base = ''
 
 def get_pose(initial_pose_tmp):
     global initial_pose 
@@ -50,9 +56,12 @@ def talker_ctrl():
     global isTacking
     global heeling
     global spHeading
+    global counter
+    global time_counter
+    global base 
 
     rospy.init_node('usv_simple_ctrl', anonymous=True)
-    rate = rospy.Rate(rate_value) # 10Hz
+    rate = rospy.Rate(rate_value) # 0.5Hz
     # publishes to thruster and rudder topics
     pub_sail = rospy.Publisher('sail/angleLimits', Float64, queue_size=10)
     #pub_sail_2 = rospy.Publisher('sail_2/angleLimits', Float64, queue_size=10)
@@ -66,12 +75,16 @@ def talker_ctrl():
     # subscribe to state and targer point topics
     rospy.Subscriber("state", Odometry, get_pose)  # get usv position (add 'gps' position latter)
     rospy.Subscriber("move_usv/goal", Odometry, get_target)  # get target position
+    base = db.text_files(new_file = True, file_name = 'prueba', structure = ['time','speed','wind','x','y'])  
 
     while not rospy.is_shutdown():
         try:
+	    time_counter += (1/rate_value)
 	    final = rudder_ctrl_msg()
-            pub_rudder.publish(final[0])
-	    pub_sail.publish(final[1])
+	    if not save_data or counter >= (rate_value // control_rate):
+                pub_rudder.publish(final[0])
+	        pub_sail.publish(final[1])
+		counter = 0
             #pub_sail_2.publish(final[2])
             pub_result.publish(result)
             pub_heading.publish(currentHeading)
@@ -97,6 +110,9 @@ def controller():
     global windDir
     global heeling
     global result
+    global base
+    global counter
+    global time_counter
 	
     port_name='interface_2'
     direction= '/home/nelson/Documentos/Ubuntu_master/SNN_Codes/Spiking_codes'
@@ -133,38 +149,46 @@ def controller():
     wind_dir = angle_saturation(math.degrees(wind_dir))
     windDir.data = math.radians(angle_saturation(math.degrees(wind_dir)+180))
     #############################################
-
+    counter +=1	
+    if save_data:
+	speed = math.sqrt(x2**2+y2**2)
+	base.append_data([time_counter,speed,math.degrees(global_dir),x1,y1])
     # Send all the position sensors information to controller in python 3
-    try:
-	cm.serial_initialization(direction,port_name,timeout)
-	info=[]
-	info.append(round(math.degrees(euler[0]),0)) 
-	info.append(round(math.degrees(euler[1]),0)) 
-	info.append(round(math.degrees(-current_heading),0)) 
-	info.append(round(wind_dir,0)) 
-        datos={'S1': x1, 'S2': y1, 'S3': x2, 'S4': y2, 'S5': info[0], 'S6': info[1], 'S7': info[2], 'S8': info[3]}
-        if not cm.write_data(datos):
-            rospy.loginfo("No se pudo escribir en el puerto")
-        else:
-            [band,recibe] = cm.read_data()
-	    if band: 
-                result_py3=recibe['A4']
-                rudder_angle=recibe['A1']
-                sail_angle=recibe['A2']
-                sail_angle_2=recibe['A3']
-		if result_py3 == 2:
-		    reset_world()
-	            result_py3=0
-    except:
-        rospy.loginfo("Error abriendo el puerto")
+    if not save_data or counter >= (rate_value // control_rate):
+        try:
+	    cm.serial_initialization(direction,port_name,timeout)
+	    info=[]
+	    info.append(round(math.degrees(euler[0]),0)) 
+	    info.append(round(math.degrees(euler[1]),0)) 
+	    info.append(round(math.degrees(-current_heading),0)) 
+	    info.append(round(wind_dir,0)) 
+            datos={'S1': x1, 'S2': y1, 'S3': x2, 'S4': y2, 'S5': info[0], 'S6': info[1], 'S7': info[2], 'S8': info[3]}
+            if not cm.write_data(datos):
+                rospy.loginfo("No se pudo escribir en el puerto")
+            else:
+                [band,recibe] = cm.read_data()
+	        if band: 
+                    result_py3=recibe['A4']
+                    rudder_angle=recibe['A1']
+                    sail_angle=recibe['A2']
+                    sail_angle_2=recibe['A3']
+		    if result_py3 == 2:
+		        reset_world()
+	                result_py3=0
+        except:
+            rospy.loginfo("Error abriendo el puerto")
 
-    #############################################   
 
-    # Actualization of result
-    result.data = int(result_py3)
-    #############################################  
-    #Timon y vela
-    return math.radians(rudder_angle),math.radians(sail_angle),math.radians(sail_angle_2)
+        #############################################   
+
+        # Actualization of result
+        result.data = int(result_py3)
+        #############################################  
+        #Timon y vela
+        return math.radians(rudder_angle),math.radians(sail_angle),math.radians(sail_angle_2)
+    
+    else:
+	return 0,0,0
 
 def rudder_ctrl_msg():
     msg = JointState()
@@ -179,8 +203,14 @@ def rudder_ctrl_msg():
 if __name__ == '__main__':
 
     global reset_world
+    global control_rate
+    global rate_value
+
     rospy.wait_for_service('/gazebo/reset_world')
     reset_world = rospy.ServiceProxy('/gazebo/reset_world', Empty)
+
+    if not save_data:
+	rate_value = control_rate
     try:
         talker_ctrl()
     except rospy.ROSInterruptException:

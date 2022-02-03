@@ -22,9 +22,9 @@ step = 1e-0
 # Simulation and control times
 time_network=500
 # Network characteristics and connections
-hyperparam = [12,1,180,7,30, #K1,K2,tacking area 1, exit states number, tacking area 2
-              70,4,30,17,255, #tacking angle, channel length, K3, exit states sail, xcenter_train
-              100,10,0.4,45, #ycenter_train, number_of_test_points, max_speed_tacking,tacking angle 2
+hyperparam = [12,1,120,7,60, #K1,K2,tacking area 1, exit states number, tacking area 2
+              70,4,30,17,20, #tacking angle, channel length, K3, exit states sail, test_distance
+              100,6,0.43,45, #ycenter_train, number_of_test_points, max_speed_tacking,tacking angle 2
               10,10,3]  # train_points_1, train_points_2, train_points_3
 files_names = ['rudder_0', 'sail_0']
 dt=1
@@ -79,19 +79,22 @@ if not Inference:
     #SNN controller
     band=False
     
-    while sail_env.scenario <= 2:
-        if not band:
-            band=p.open_port()
-        else:
-            data=p.read_data_sensor()
-            if not isinstance(data,bool):
-                if not test:
-                    control_action = sail_env.environment_step(data = data, max_rate = max_freq,
-                                                               min_rate = min_freq)
-                else:
-                    control_action = sail_env.environment_test(data = data, max_rate = max_freq,
-                                                               min_rate = min_freq)
-                p.write_control_action(control_action)
-                rudder_ctrl.print_weigths(im=None)
-            else:
-                print("No data")
+    # while sail_env.scenario <= 2:
+    #     if not band:
+    #         band=p.open_port()
+    #     else:
+    #         data=p.read_data_sensor()
+    #         if not isinstance(data,bool):
+    #             if not test:
+    #                 control_action = sail_env.environment_step(data = data, max_rate = max_freq,
+    #                                                            min_rate = min_freq)
+    #             else:
+    #                 control_action = sail_env.environment_test(data = data, max_rate = max_freq,
+    #                                                            min_rate = min_freq)
+    #             p.write_control_action(control_action)
+    #             rudder_ctrl.print_weigths(im=None)
+    #         else:
+    #             print("No data")
+    if not band:
+        band=p.open_port()   
+    sail_env.environment_PI_test(p)

@@ -32,7 +32,6 @@ class serial_port:
             angles = [recibe['S5'],recibe['S6'],recibe['S7']]
             wind = recibe['S8']
             band = [band]+[position]+[angles]+[wind]
-            print(position)
 
         return band
 
@@ -53,8 +52,7 @@ class serial_port:
             rudder_angle = info
             sail_angle = ctr.sail_ctrl(data)
         result = ctr.verify_result()
-
-        return [rudder_angle,sail_angle,result]
+        return [rudder_angle,sail_angle,sail_angle,result]
 
     def open_port(self):
         l=cm.serial_initialization(self.direction,self.port_name,self.timeout)
@@ -71,7 +69,6 @@ class serial_port:
             if not isinstance(data,bool):
                 control = self.classic_control_action(data)
                 self.write_control_action(control)
-                #print(data[3])
             else:
                 print("No hay dato")
                 

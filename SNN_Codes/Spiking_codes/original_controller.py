@@ -63,7 +63,7 @@ def rudder_ctrl(position, euler):  # position=[x1,y1,x2,y2]  orientation=[x,y,z,
     myradians = math.atan2(position[3] - position[1], position[2] - position[0])
     sp_angle = math.degrees(myradians)
     target_distance = math.hypot(position[2] - position[0], position[3] - position[1])
-    target_angle = math.degrees(euler[2])
+    target_angle = euler[2]
     sp_angle = angle_saturation(sp_angle)
     spHeading = sp_angle
     sp_angle = -sp_angle
@@ -74,27 +74,18 @@ def rudder_ctrl(position, euler):  # position=[x1,y1,x2,y2]  orientation=[x,y,z,
     err = angle_saturation(err)
     err = P(err) + Integral(err)
     rudder_angle = err / 2
-
+    if err > 60:
+        err = 60
+    if err < -60:
+        err = -60
     return rudder_angle
 
 
-def sail_ctrl(wind_dir,test):
-    global current_heading
-    global windDir
-    global heeling
-
-    sail_angle = wind_dir
-
-    if sail_angle  >0 and not test:
-        sail_angle = -80
-    elif  sail_angle  <0 and not test:
-        sail_angle = 80        
-    elif sail_angle  >0 and test:
-        sail_angle = -20
-    else:
-        sail_angle = 20
-
-    return sail_angle
+def sail_ctrl(wind_dir):
+    sail_angle = math.radians(wind_dir)/2;
+    if math.degrees(sail_angle) < -80:
+        sail_angle = -sail_angle
+    return math.degrees(-sail_angle)
 
 
 def verify_result():
