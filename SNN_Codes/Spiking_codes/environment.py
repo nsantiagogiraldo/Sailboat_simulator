@@ -11,10 +11,10 @@ import train_scenarios as ts
 
 class sailboat_environment(ts.train_test_scenarios):
     
-    m=0
-    theta=0
-    b1=0
-    b2=0
+    m = 0
+    theta = 0
+    b1 = 0
+    b2 = 0
     state = 0
     n_data = []
     distance = 0
@@ -88,7 +88,6 @@ class sailboat_environment(ts.train_test_scenarios):
         k = np.abs(0.5*(w+const*self.tack)/np.cos(self.theta))
         self.b1 = r[1]-self.m*r[0]+k
         self.b2 = r[1]-self.m*r[0]-k
-        print (self.m,self.b1,self.b2)
         
     def is_restart(self,r,control_action):
         if r[1]<=self.m*r[0]+self.b1 and r[1]>=self.m*r[0]+self.b2:
@@ -181,7 +180,7 @@ class sailboat_environment(ts.train_test_scenarios):
             
     def aparent_wind(self, real_wind_angle, sailboat_speed, yaw):
         
-        i = sailboat_speed/np.sqrt(9)
+        i = sailboat_speed/2.2
         theta = np.arctan2(np.sin(np.pi*real_wind_angle/180)-i*np.sin(np.pi*yaw/180),
                            np.cos(real_wind_angle)-i*np.cos(yaw))
         
@@ -280,8 +279,24 @@ class sailboat_environment(ts.train_test_scenarios):
         control_action[3] = self.is_finish()
         self.restart = cp.copy(control_action[3])
         control_action[2] = control_action[1]
-        print(self.waypoints[self.state+1])
         return control_action
+    
+    def environment_PI_test(self, port):
+        while port.j:
+            data=port.read_data_sensor_2()
+            if not isinstance(data,bool):
+                if(self.restart==1):
+                    self.state += 1
+                self.distance = np.sqrt((data[1][0]-self.waypoints[self.state+1][0])**2+(data[1][1]-self.waypoints[self.state+1][1])**2)
+                data[1][2] = self.waypoints[self.state+1][0]
+                data[1][3] = self.waypoints[self.state+1][1]
+                control = port.classic_control_action(data)
+                control_action = self.is_finish()
+                self.restart = cp.copy(control_action)
+                port.write_control_action(control)
+            else:
+                print("No hay dato")
+                
     
     def control_inputs(self, data, max_rate, min_rate):
         self.distance = np.sqrt((data[1]-self.waypoints[self.state+1][0])**2+(data[2]-self.waypoints[self.state+1][1])**2)
@@ -292,7 +307,6 @@ class sailboat_environment(ts.train_test_scenarios):
                                                 min_ang=-180, 
                                                 max_ang=180)
         self.actual_speed = np.sqrt(data[7]**2+data[8]**2)
-        print(self.actual_speed)
         for i in range(len(self.controllers)):
             if self.controllers[i].is_rudder_controller: # State coding, this metod works with MSTDP, choosen method
                 l = [min_rate]*int(self.hyperparam[0]*self.hyperparam[1]);
@@ -349,7 +363,7 @@ class sailboat_environment(ts.train_test_scenarios):
                     pitch = (self.sensor_max[2]-1)*pitch/abs(pitch)
                 
                 n1 = ((err_ang+self.sensor_max[0])*self.hyperparam[0])//180
-                n2 = ((pitch+self.sensor_max[2])*2*self.hyperparam[1])//180      
+                n2 = ((pitch+self.sensor_max[2])*2*self.hyperparam[1])//180
         
                 l[int(self.hyperparam[0]*(self.hyperparam[1]*n3+n2)+n1)] = max_rate
                 self.n_data.append(l)

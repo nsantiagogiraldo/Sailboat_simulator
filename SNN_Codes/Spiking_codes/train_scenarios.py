@@ -22,50 +22,63 @@ class train_test_scenarios:
         self.waypoints = []
         
         if test:
-            center = [0,0]
-            center [0] = self.hyperparam[9]
-            center [1] = self.hyperparam[10]
-            r = np.sqrt((self.initial_point[0]-center[0])**2+(self.initial_point[1]-center[1])**2)
-            n = self.hyperparam[11]
-            theta=np.arctan2(self.initial_point[1]-center[1], self.initial_point[0]-center[0])
+            # band = True
+            # center = [0,0]
+            # phi = 360/self.hyperparam[11]
+            # y = 0.5*self.hyperparam[9]
+            # x = y/np.tan(np.radians(0.5*phi))
+            # center[0] =  self.initial_point[0]-x
+            # center[1] =  self.initial_point[1]-y
+            # r = np.sqrt((self.initial_point[0]-center[0])**2+(self.initial_point[1]-center[1])**2)         
             
-            for i in range(n-1):
-                theta += 2*np.pi/n
-                x = int(r*np.cos(theta)+center[0])
-                y = int(r*np.sin(theta)+center[1])
-                self.waypoints.append([x,y,0])
+            # n = 2*self.hyperparam[11]
+            # theta = phi/2
+            
+            # for i in range(n-1):
+            #     if band and i>= self.hyperparam[11]:
+            #         band = False
+            #         theta = 180 - 0.5*phi
+            #         center[0] = self.initial_point[0]+x
+            #         phi *= -1                   
+                    
+            #     theta += phi
+            #     xf = int(r*np.cos(np.radians(theta))+center[0])
+            #     yf = int(r*np.sin(np.radians(theta))+center[1])
+            #     self.waypoints.append([xf,yf,0])
+            
+            self.waypoints=[
+                [240.0, 100.0, 0],
+                [255.0, 95.0, 0], #(255.0, 100.0, 0.0)
+                [260.0, 105.0, 0], #(260.0, 105.0, 0.0)
+                [265.0, 100.0, 0], #(265.0, 100.0, 0.0)
+                [270.0, 95.0, 0], #(270.0, 95.0, 0.0)
+                [275.0, 100.0, 0],
+                [270.0, 105.0, 0],
+                [265.0, 100.0, 0],
+                [260.0, 95.0, 0],
+                [255.0, 100.0, 0],
+                [250.0, 105.0, 0],
+                [245.0, 100.0, 0],
+                [240.0, 100.0, 0]
+            ]
             
             # self.waypoints=[
-            #     [240.0, 100.0, 0],
-            #     [255.0, 95.0, 0], #(255.0, 100.0, 0.0)
-            #     [260.0, 105.0, 0], #(260.0, 105.0, 0.0)
-            #     [265.0, 100.0, 0], #(265.0, 100.0, 0.0)
-            #     [270.0, 95.0, 0], #(270.0, 95.0, 0.0)
-            #     [275.0, 100.0, 0],
-            #     [270.0, 105.0, 0],
-            #     [265.0, 100.0, 0],
-            #     [260.0, 95.0, 0],
-            #     [255.0, 100.0, 0],
-            #     [250.0, 105.0, 0],
-            #     [245.0, 100.0, 0],
-            #     [240.0, 100.0, 0]
-            # ]
-            
-           # self.waypoints=[
-           #      [240.0, 100.0, 0],
-           #      [275.0, 100.0, 0],
-           #      [240.0, 100.0, 0]
-           #  ]
+            #      [240.0, 100.0, 0],
+            #      [252.0, 110.0, 0],
+            #      [264.0, 90.0, 0],
+            #      [276.0, 100.0, 0],
+            #      [240.0, 100.0, 0]
+            #  ]
             # self.waypoints=[
-            #     [240.0, 100.0, 0.0],
+            #     [240.0, 105.0, 0.0],
             #     #[270.0, 95.0, 0.0]
-            #     [268.0, 67.0, 0.0]
+            #     [270.0, 100.0, 0.0]
             # ]
 
-        elif self.scenario == 0:
+        elif self.scenario == 0: #Direct
             center = self.initial_point
             n = self.hyperparam[14]
-            theta=np.pi/2
+            theta = np.pi/2
             r = 30
             
             for i in range(n):           
@@ -75,7 +88,7 @@ class train_test_scenarios:
                 theta -= np.pi/(n-1)
  
         elif self.scenario == 1:
-            center = self.initial_point # Turn the wind to
+            center = self.initial_point # Turn the wind. Tacking
             n = self.hyperparam[16]
             theta=np.pi/2
             r = 25
@@ -91,7 +104,7 @@ class train_test_scenarios:
                 y = int(r*np.sin(theta)+center[1])
                 self.waypoints.append([x,y,0])
                 
-        elif self.scenario == 2:
+        elif self.scenario == 2: #Reverse
             center = self.initial_point
             n = self.hyperparam[14]
             theta=np.pi/2
@@ -107,6 +120,7 @@ class train_test_scenarios:
                 self.waypoints.append([x,y,1])
                 theta += np.pi/(n-1)
                 
-        self.number_train = n
-        np.random.shuffle(self.waypoints)
-        self.waypoints.insert(0, self.initial_point)
+        # self.number_train = n
+        # if not test:
+        #     np.random.shuffle(self.waypoints)
+        # self.waypoints.insert(0, self.initial_point)
