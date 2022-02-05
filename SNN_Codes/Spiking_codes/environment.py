@@ -33,6 +33,7 @@ class sailboat_environment(ts.train_test_scenarios):
     tack_sign = False
     tack_angle_logic = [-1000,-1000]
     tack_rst = False
+    file_number = 1
     
     def __init__(self, rudder_ctrl, sail_ctrl, vmax, vmin, hyperparam, path, learning = True):
         self.controllers.append(rudder_ctrl)
@@ -159,7 +160,7 @@ class sailboat_environment(ts.train_test_scenarios):
         if self.distance<self.min_distance:
             final = 1
         else:
-            final = 0
+            final = self.file_number + 2
         return final
     
     def save_SNN_state(self):
@@ -282,20 +283,19 @@ class sailboat_environment(ts.train_test_scenarios):
         return control_action
     
     def environment_PI_test(self, port):
-        while port.j:
-            data=port.read_data_sensor_2()
-            if not isinstance(data,bool):
-                if(self.restart==1):
-                    self.state += 1
-                self.distance = np.sqrt((data[1][0]-self.waypoints[self.state+1][0])**2+(data[1][1]-self.waypoints[self.state+1][1])**2)
-                data[1][2] = self.waypoints[self.state+1][0]
-                data[1][3] = self.waypoints[self.state+1][1]
-                control = port.classic_control_action(data)
-                control_action = self.is_finish()
-                self.restart = cp.copy(control_action)
-                port.write_control_action(control)
-            else:
-                print("No hay dato")
+        data=port.read_data_sensor_2()
+        if not isinstance(data,bool):
+            if(self.restart==1):
+                self.state += 1
+            self.distance = np.sqrt((data[1][0]-self.waypoints[self.state+1][0])**2+(data[1][1]-self.waypoints[self.state+1][1])**2)
+            data[1][2] = self.waypoints[self.state+1][0]
+            data[1][3] = self.waypoints[self.state+1][1]
+            control = port.classic_control_action(data)
+            control_action = self.is_finish()
+            self.restart = cp.copy(control_action)
+            port.write_control_action(control)
+        else:
+            print("No hay dato")
                 
     
     def control_inputs(self, data, max_rate, min_rate):
@@ -345,6 +345,8 @@ class sailboat_environment(ts.train_test_scenarios):
                                                                  max_ang=180)
                     self.tack = True
                 else:
+                    self.tack_angle_logic [0] = -1000
+                    self.tack_angle_logic [1] = -1000
                     self.tack = False
                     n3 = 0
                 

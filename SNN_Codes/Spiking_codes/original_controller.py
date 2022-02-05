@@ -33,10 +33,11 @@ def euler_from_quaternion(x, y, z, w):
 
 
 def angle_saturation(sensor):
-    if sensor > 180:
-        sensor = sensor - 360
-    if sensor < -180:
-        sensor = sensor + 360
+    while sensor >180 or sensor < -180:
+        if sensor > 180:
+            sensor = sensor - 360
+        if sensor < -180:
+            sensor = sensor + 360
     return sensor
 
 
@@ -81,7 +82,9 @@ def rudder_ctrl(position, euler):  # position=[x1,y1,x2,y2]  orientation=[x,y,z,
     return rudder_angle
 
 
-def sail_ctrl(wind_dir):
+def sail_ctrl(global_dir):
+    wind_dir = global_dir - math.degrees(current_heading)
+    wind_dir = angle_saturation(wind_dir+180)
     sail_angle = math.radians(wind_dir)/2;
     if math.degrees(sail_angle) < -80:
         sail_angle = -sail_angle
