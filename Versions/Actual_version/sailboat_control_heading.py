@@ -33,6 +33,8 @@ save_data = True
 counter = 0
 time_counter = 0
 base = ''
+db_name = 'Test_1'
+constant = [2,3]
 
 def get_pose(initial_pose_tmp):
     global initial_pose 
@@ -59,6 +61,7 @@ def talker_ctrl():
     global counter
     global time_counter
     global base 
+    global constant
 
     rospy.init_node('usv_simple_ctrl', anonymous=True)
     rate = rospy.Rate(rate_value) # 0.5Hz
@@ -75,11 +78,15 @@ def talker_ctrl():
     # subscribe to state and targer point topics
     rospy.Subscriber("state", Odometry, get_pose)  # get usv position (add 'gps' position latter)
     rospy.Subscriber("move_usv/goal", Odometry, get_target)  # get target position
-    base = db.text_files(new_file = True, file_name = 'prueba', structure = ['time','speed','wind','x','y'])  
+
 
     while not rospy.is_shutdown():
         try:
-	    time_counter += (1/rate_value)
+	    time_counter += (1.0/rate_value)
+	    if save_data and constant[0]!=constant[1]:
+                base = db.text_files(new_file = True, file_name = db_name, structure = ['time','speed','wind','x','y'])  
+		constant[0] = constant[1]
+		time_counter = 0
 	    final = rudder_ctrl_msg()
 	    if not save_data or counter >= (rate_value // control_rate):
                 pub_rudder.publish(final[0])
@@ -113,6 +120,8 @@ def controller():
     global base
     global counter
     global time_counter
+    global constant
+    global db_name
 	
     port_name='interface_2'
     direction= '/home/nelson/Documentos/Ubuntu_master/SNN_Codes/Spiking_codes'
@@ -175,6 +184,11 @@ def controller():
 		    if result_py3 == 2:
 		        reset_world()
 	                result_py3=0
+		    elif result_py3 > 2 and save_data:
+			db_name=db_name[0:len(db_name)-1]+str(int(result_py3-2))
+			constant[1] = result_py3
+			
+			
         except:
             rospy.loginfo("Error abriendo el puerto")
 

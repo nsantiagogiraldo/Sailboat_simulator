@@ -47,7 +47,7 @@ class serial_port:
     def classic_control_action(self,data,info=1000):
         if info==1000:
             rudder_angle = ctr.rudder_ctrl(data[1],data[2])
-            sail_angle = ctr.sail_ctrl(data[3])
+            sail_angle = ctr.sail_ctrl(data[3]+data[2][2])
         else:
             rudder_angle = info
             sail_angle = ctr.sail_ctrl(data)
