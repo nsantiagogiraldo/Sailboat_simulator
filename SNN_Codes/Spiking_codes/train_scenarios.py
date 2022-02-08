@@ -120,7 +120,7 @@ class train_test_scenarios:
                 self.waypoints.append([x,y,1])
                 theta += np.pi/(n-1)
                 
-        # self.number_train = n
-        # if not test:
-        #     np.random.shuffle(self.waypoints)
-        # self.waypoints.insert(0, self.initial_point)
+        self.number_train = n
+        if not test:
+            np.random.shuffle(self.waypoints)
+        self.waypoints.insert(0, self.initial_point)
