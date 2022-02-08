@@ -139,8 +139,8 @@ class SNN_complete_train_test:
         
     def train_SNN(self):
         
-        self.config_SNN_train()
         self.change_simulation_type(2)
+        self.config_SNN_train()       
         band=False
         while self.sail_env.scenario <= 2:
             if not band:
@@ -157,8 +157,8 @@ class SNN_complete_train_test:
         self.p.write_control_action([0,0,0,2])
         
     def test_SNN(self):
-        self.config_SNN_test()
         self.change_simulation_type(1)
+        self.config_SNN_test()
         band=False
         while self.sail_env.state < len(self.sail_env.waypoints)-2:
             if not band:
@@ -175,8 +175,8 @@ class SNN_complete_train_test:
         self.p.write_control_action([0,0,0,2])
                     
     def test_PI(self):
-        band=False
         self.change_simulation_type(0)
+        band=False
         while self.sail_env.state < len(self.sail_env.waypoints)-2:
             if not band:
                 band=self.p.open_port()
