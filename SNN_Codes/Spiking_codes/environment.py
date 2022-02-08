@@ -34,6 +34,7 @@ class sailboat_environment(ts.train_test_scenarios):
     tack_angle_logic = [-1000,-1000]
     tack_rst = False
     file_number = 1
+    prev_scenario = 0
     
     def __init__(self, rudder_ctrl, sail_ctrl, vmax, vmin, hyperparam, path, learning = True):
         self.controllers.append(rudder_ctrl)
@@ -124,7 +125,9 @@ class sailboat_environment(ts.train_test_scenarios):
     def real_action(self,real_value, desired_value, min_value, max_value, num_state):
         max_error = max_value - min_value
         size_error = 2*max_error
-        error = desired_value - real_value
+        error = self.angle_saturation(ang = desired_value - real_value,
+                                      min_ang=-180,
+                                      max_ang=180)
         desired_state = ((error + max_error)*num_state)//size_error
         
         if desired_state >= num_state-1:
@@ -166,17 +169,14 @@ class sailboat_environment(ts.train_test_scenarios):
     def save_SNN_state(self):
         if(self.restart==1):
             self.state += 1
-        # if (self.saving < self.state and not self.tack) or (self.tack and self.restart==1):
-        #     for i in range(len(self.controllers)):
-        #         self.controllers[i].save_SNN(self.path)
-        #     self.saving +=1
         if self.state == self.number_train:
             self.controllers[1].network_name += str(self.scenario)
             for i in range(len(self.controllers)):
                 self.controllers[i].save_SNN(self.path)
-            self.state = 0
             self.scenario += 1
-            self.train_scenario()
+            if self.scenario!=3:
+                self.train_scenario()
+            self.state = 0
             
             
     def aparent_wind(self, real_wind_angle, sailboat_speed, yaw):
@@ -250,20 +250,24 @@ class sailboat_environment(ts.train_test_scenarios):
         
         control_action = [0,0,0,0]
         self.save_SNN_state()
-        self.control_inputs(data = data, max_rate = max_rate, min_rate = min_rate)
-        self.calculate_reward(data = data)
-        for i in range(len(self.controllers)):
-            control_action[i] = int(self.controllers[i].train_episode(n_data = self.n_data[i],
-                                                                      reward = self.rewards[i]))
-        control_action[3] = self.is_finish()
-        self.is_restart([data[1],data[2]], control_action[3])
-        self.prev_angle = control_action[1]
-        self.prev_sail_objective = self.sail_aproximation(prev_yaw=data[5])
-        #control_action[1] = self.prev_sail_objective
-        control_action[2] = control_action[1]
-        control_action[3] = cp.copy(self.restart)
-        if self.restart == 1 or self.restart == 2:
-            control_action[3] = 2
+        if self.scenario == self.prev_scenario and self.scenario!=3:
+            self.control_inputs(data = data, max_rate = max_rate, min_rate = min_rate)
+            self.calculate_reward(data = data)
+            for i in range(len(self.controllers)):
+                control_action[i] = int(self.controllers[i].train_episode(n_data = self.n_data[i],
+                                                                          reward = self.rewards[i]))
+            control_action[3] = self.is_finish()
+            self.is_restart([data[1],data[2]], control_action[3])
+            self.prev_angle = control_action[1]
+            self.prev_sail_objective = self.sail_aproximation(prev_yaw=data[5])
+            #control_action[1] = self.prev_sail_objective
+            control_action[2] = control_action[1]
+            control_action[3] = cp.copy(self.restart)
+            if self.restart == 1 or self.restart == 2:
+                control_action[3] = 2
+        elif self.scenario!=3:
+            control_action[3] = 200
+            self.prev_scenario += 1
         return control_action  
     
     def environment_test(self, data, max_rate, min_rate):
