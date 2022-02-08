@@ -140,6 +140,7 @@ class SNN_complete_train_test:
     def train_SNN(self):
         
         self.config_SNN_train()
+        self.change_simulation_type(2)
         band=False
         while self.sail_env.scenario <= 2:
             if not band:
@@ -153,10 +154,11 @@ class SNN_complete_train_test:
                     #rudder_ctrl.print_weigths(im=None)
                 else:
                     print("No data")
-                    
-    def test_SNN(self):
+        self.p.write_control_action([0,0,0,2])
         
+    def test_SNN(self):
         self.config_SNN_test()
+        self.change_simulation_type(1)
         band=False
         while self.sail_env.state < len(self.sail_env.waypoints)-2:
             if not band:
@@ -170,22 +172,30 @@ class SNN_complete_train_test:
                     #rudder_ctrl.print_weigths(im=None)
                 else:
                     print("No data")
+        self.p.write_control_action([0,0,0,2])
                     
     def test_PI(self):
         band=False
+        self.change_simulation_type(0)
         while self.sail_env.state < len(self.sail_env.waypoints)-2:
             if not band:
                 band=self.p.open_port()
             else:
                 self.sail_env.environment_PI_test(self.p)
+        
+        self.p.write_control_action([0,0,0,2])
                 
     def change_database_number(self, number):
         self.sail_env.file_number = number
-                
-m = SNN_complete_train_test()
-if  m.PI_test:
-    m.test_PI()
-elif m.test:
-    m.test_SNN()
-else:
-    m.train_SNN()
+        
+    def change_simulation_type(self, type_simulation):
+        
+        if type_simulation == 0:
+            self.PI_test = True
+            self.test = False
+        elif type_simulation == 1:
+            self.test = True
+            self.PI_test = False
+        else:
+            self.test = False
+            self.PI_test = False

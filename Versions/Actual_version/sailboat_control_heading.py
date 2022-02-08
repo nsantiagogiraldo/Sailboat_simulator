@@ -13,6 +13,9 @@ from geometry_msgs.msg import Quaternion
 from geometry_msgs.msg import Twist, Point, Quaternion
 from std_msgs.msg import Float64
 from std_srvs.srv import Empty
+from gazebo_msgs.msg import ModelState 
+from gazebo_msgs.srv import SetModelState
+from tf.transformations import quaternion_from_euler
 
 initial_pose = Odometry()
 target_pose = Odometry()
@@ -35,6 +38,7 @@ time_counter = 0
 base = ''
 db_name = 'Test_1'
 constant = [2,3]
+state_msg = ''
 
 def get_pose(initial_pose_tmp):
     global initial_pose 
@@ -104,6 +108,17 @@ def talker_ctrl():
         except rospy.ROSTimeMovedBackwardsException:
 	    rospy.logerr("ROS Time Backwards! Just ignore the exception!")
 
+def reset_environment(yaw):
+    q = quaternion_from_euler(0, 0, yaw)
+    state_msg.model_name = 'sailboat'
+    state_msg.pose.position.x = 240
+    state_msg.pose.position.y = 100
+    state_msg.pose.position.z = 0
+    state_msg.pose.orientation.x = q[0]
+    state_msg.pose.orientation.y = q[1]
+    state_msg.pose.orientation.z = q[2]
+    state_msg.pose.orientation.w = q[3]
+    resp = set_state(state_msg)
 
 def controller():
     # erro = sp - atual
@@ -182,7 +197,8 @@ def controller():
                     sail_angle=recibe['A2']
                     sail_angle_2=recibe['A3']
 		    if result_py3 == 2:
-		        reset_world()
+		        #reset_world()
+			reset_environment(1.57)
 	                result_py3=0
 		    elif result_py3 > 2 and save_data:
 			db_name=db_name[0:len(db_name)-1]+str(int(result_py3-2))
@@ -220,8 +236,12 @@ if __name__ == '__main__':
     global control_rate
     global rate_value
 
-    rospy.wait_for_service('/gazebo/reset_world')
-    reset_world = rospy.ServiceProxy('/gazebo/reset_world', Empty)
+    #rospy.wait_for_service('/gazebo/reset_world')
+    #reset_world = rospy.ServiceProxy('/gazebo/reset_world', Empty)
+
+    state_msg = ModelState()
+    rospy.wait_for_service('/gazebo/set_model_state')
+    set_state = rospy.ServiceProxy('/gazebo/set_model_state', SetModelState)
 
     if not save_data:
 	rate_value = control_rate
