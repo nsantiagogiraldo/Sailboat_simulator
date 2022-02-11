@@ -32,13 +32,15 @@ heeling = 0
 spHeading = 10 
 isTacking = 0
 reset_world = 0
-save_data = True
+save_data = False
 counter = 0
 time_counter = 0
 base = ''
 db_name = 'Test_1'
 constant = [2,3]
 state_msg = ''
+yaw_angles = [0,135,179,0] #Train yaw angles
+yaw_counter = 0
 
 def get_pose(initial_pose_tmp):
     global initial_pose 
@@ -96,7 +98,7 @@ def talker_ctrl():
                 pub_rudder.publish(final[0])
 	        pub_sail.publish(final[1])
 		counter = 0
-            #pub_sail_2.publish(final[2])
+                #pub_sail_2.publish(final[2])
             pub_result.publish(result)
             pub_heading.publish(currentHeading)
             pub_windDir.publish(windDir)
@@ -137,6 +139,7 @@ def controller():
     global time_counter
     global constant
     global db_name
+    global yaw_counter
 	
     port_name='interface_2'
     direction= '/home/nelson/Documentos/Ubuntu_master/SNN_Codes/Spiking_codes'
@@ -198,8 +201,16 @@ def controller():
                     sail_angle_2=recibe['A3']
 		    if result_py3 == 2:
 		        #reset_world()
-			reset_environment(1.57)
+			reset_environment(math.radians(yaw_angles[yaw_counter]))
 	                result_py3=0
+		    elif result_py3 == 1000:
+			yaw_counter = 0
+			reset_environment(math.radians(yaw_angles[yaw_counter]))
+			result_py3=0
+		    elif result_py3 > 100:
+			yaw_counter += 1
+			reset_environment(math.radians(yaw_angles[yaw_counter]))
+			result_py3=0
 		    elif result_py3 > 2 and save_data:
 			db_name=db_name[0:len(db_name)-1]+str(int(result_py3-2))
 			constant[1] = result_py3
@@ -242,6 +253,7 @@ if __name__ == '__main__':
     state_msg = ModelState()
     rospy.wait_for_service('/gazebo/set_model_state')
     set_state = rospy.ServiceProxy('/gazebo/set_model_state', SetModelState)
+    reset_environment(math.radians(yaw_angles[yaw_counter]))
 
     if not save_data:
 	rate_value = control_rate

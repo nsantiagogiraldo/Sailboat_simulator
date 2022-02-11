@@ -11,9 +11,11 @@ class text_files:
     name = ''
     columns_names = ''
     num_data = 0
-    
-    def __init__(self, new_file, file_name, structure = ''):
-        self.name = file_name+'.csv'
+    path = ''
+
+    def __init__(self, new_file, file_name, path ,structure = ''):
+        self.path = path+'/data_result/'
+        self.name = self.path+file_name+'.csv'
         if new_file:
             self.columns_names = structure
             self.new_file()
@@ -41,7 +43,7 @@ class text_files:
     def convert_data(self,data):
         str_data = str(self.num_data)+','
         for i in data:
-            str_data += i+','
+            str_data += str(i)+','
         str_data += '\n'
         self.num_data += 1
         return str_data
@@ -51,3 +53,11 @@ class text_files:
         str_data = self.convert_data(data)
         file.write(str_data)
         file.close()
+
+    def is_created(self):
+        filePath = self.name
+        try:
+            with open(filePath, 'r') as f:
+                return True
+        except:
+            return False 

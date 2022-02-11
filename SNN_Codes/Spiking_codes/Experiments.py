@@ -10,3 +10,4 @@ import SNN_train_controller as ctrl
 
 m = ctrl.SNN_complete_train_test()
 m.train_SNN()
+m.test_SNN()

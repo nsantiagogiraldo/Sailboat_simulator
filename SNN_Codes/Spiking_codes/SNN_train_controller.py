@@ -85,12 +85,14 @@ class SNN_complete_train_test:
             self.dt = int(info[16])
             self.test = int(info[17]) == 1
             self.PI_test = int(info[18]) == 1
+            self.permutation = int(info[19])
             
             self.control_signals=[self.hyperparam[0]*self.hyperparam[1],2*self.hyperparam[7]]
             self.neur = [[self.control_signals[0]*self.redundance[0],self.number_actuators],
                          [self.control_signals[1]*self.redundance[1],self.number_actuators]]      
         except:
             print("Error loading config file")
+        
             
     def config_environment(self,rudder_ctrl,sails_ctrl):
         
@@ -140,7 +142,11 @@ class SNN_complete_train_test:
     def train_SNN(self):
         
         self.change_simulation_type(2)
-        self.config_SNN_train()       
+        self.config_SNN_train()    
+        self.sail_env.set_database(db_name = 'Train_'+str(self.permutation), path = self.direction, 
+                                   structure = ['scenario','state','reward_rudder',
+                                                'reward_sail','epoch','wind','x','y',
+                                                'speed'])
         band=False
         while self.sail_env.scenario <= 2:
             if not band:
@@ -151,14 +157,17 @@ class SNN_complete_train_test:
                     control_action = self.sail_env.environment_step(data = data, max_rate = self.max_freq,
                                                                     min_rate = self.min_freq)
                     self.p.write_control_action(control_action)
-                    #rudder_ctrl.print_weigths(im=None)
+                    #self.sail_env.controllers[0].print_spikes(spike_ims=None, spike_axes=None)
                 else:
                     print("No data")
-        self.p.write_control_action([0,0,0,2])
+        self.p.write_control_action([0,0,0,1000])
         
     def test_SNN(self):
         self.change_simulation_type(1)
         self.config_SNN_test()
+        self.sail_env.set_database(db_name = 'Test_'+str(self.permutation), path = self.direction, 
+                                   structure = ['state','wind','x','y','speed',
+                                                'heeling'])
         band=False
         while self.sail_env.state < len(self.sail_env.waypoints)-2:
             if not band:
@@ -169,13 +178,15 @@ class SNN_complete_train_test:
                     control_action = self.sail_env.environment_test(data = data, max_rate = self.max_freq,
                                                                     min_rate = self.min_freq)
                     self.p.write_control_action(control_action)
-                    #rudder_ctrl.print_weigths(im=None)
                 else:
                     print("No data")
-        self.p.write_control_action([0,0,0,2])
+        self.p.write_control_action([0,0,0,1000])
                     
     def test_PI(self):
         self.change_simulation_type(0)
+        self.sail_env.set_database(db_name = 'TestPI', path = self.direction, 
+                                   structure = ['state','wind','x','y','speed',
+                                                'heeling'])
         band=False
         while self.sail_env.state < len(self.sail_env.waypoints)-2:
             if not band:
@@ -183,7 +194,7 @@ class SNN_complete_train_test:
             else:
                 self.sail_env.environment_PI_test(self.p)
         
-        self.p.write_control_action([0,0,0,2])
+        self.p.write_control_action([0,0,0,1000])
                 
     def change_database_number(self, number):
         self.sail_env.file_number = number

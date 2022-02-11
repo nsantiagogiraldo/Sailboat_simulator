@@ -8,6 +8,7 @@ Created on Mon Sep 27 13:14:17 2021
 import numpy as np
 import copy as cp
 import train_scenarios as ts
+import text_file as db
 
 class sailboat_environment(ts.train_test_scenarios):
     
@@ -35,6 +36,9 @@ class sailboat_environment(ts.train_test_scenarios):
     tack_rst = False
     file_number = 1
     prev_scenario = 0
+    base = ''
+    learning = True
+    epoch = 1
     
     def __init__(self, rudder_ctrl, sail_ctrl, vmax, vmin, hyperparam, path, learning = True):
         self.controllers.append(rudder_ctrl)
@@ -44,8 +48,27 @@ class sailboat_environment(ts.train_test_scenarios):
         self.hyperparam = hyperparam
         self.path = path
         self.learning = learning
+        self.epoch = 1
         self.train_scenario(test = not learning)      
-
+    
+    def set_database(self,db_name,path,structure):
+        self.base = db.text_files(new_file = True, file_name = db_name, path = path, structure = structure) 
+        
+    def save_data(self,data):
+        real_wind_angle = self.angle_saturation(ang = data[6] + data[5], 
+                                                min_ang=-180, 
+                                                max_ang=180)
+        if self.learning:
+            
+            self.base.append_data([self.scenario,self.state+1,self.rewards[0], 
+                                   self.rewards[1],self.epoch,real_wind_angle,
+                                   data[1],data[2],self.actual_speed])
+            
+        else:
+            
+            self.base.append_data([self.state+1,real_wind_angle,
+                                   data[1],data[2],self.actual_speed,data[3]])
+        
     def reward(self, data):
         
         for k in range(len(self.controllers)):
@@ -170,7 +193,6 @@ class sailboat_environment(ts.train_test_scenarios):
         if(self.restart==1):
             self.state += 1
         if self.state == self.number_train:
-            self.controllers[1].network_name += str(self.scenario)
             for i in range(len(self.controllers)):
                 self.controllers[i].save_SNN(self.path)
             self.scenario += 1
@@ -181,7 +203,7 @@ class sailboat_environment(ts.train_test_scenarios):
             
     def aparent_wind(self, real_wind_angle, sailboat_speed, yaw):
         
-        i = sailboat_speed/2.2
+        i = sailboat_speed/(0.5144*2.2)
         theta = np.arctan2(np.sin(np.pi*real_wind_angle/180)-i*np.sin(np.pi*yaw/180),
                            np.cos(real_wind_angle)-i*np.cos(yaw))
         
@@ -250,7 +272,7 @@ class sailboat_environment(ts.train_test_scenarios):
         
         control_action = [0,0,0,0]
         self.save_SNN_state()
-        if self.scenario == self.prev_scenario and self.scenario!=3:
+        if (self.scenario == self.prev_scenario) and self.scenario!=3:
             self.control_inputs(data = data, max_rate = max_rate, min_rate = min_rate)
             self.calculate_reward(data = data)
             for i in range(len(self.controllers)):
@@ -263,8 +285,11 @@ class sailboat_environment(ts.train_test_scenarios):
             #control_action[1] = self.prev_sail_objective
             control_action[2] = control_action[1]
             control_action[3] = cp.copy(self.restart)
+            #print(control_action[0])
             if self.restart == 1 or self.restart == 2:
                 control_action[3] = 2
+                self.epoch += 1
+            self.save_data(data)
         elif self.scenario!=3:
             control_action[3] = 200
             self.prev_scenario += 1
@@ -284,6 +309,7 @@ class sailboat_environment(ts.train_test_scenarios):
         control_action[3] = self.is_finish()
         self.restart = cp.copy(control_action[3])
         control_action[2] = control_action[1]
+        self.save_data(data)
         return control_action
     
     def environment_PI_test(self, port):
@@ -298,6 +324,7 @@ class sailboat_environment(ts.train_test_scenarios):
             control_action = self.is_finish()
             self.restart = cp.copy(control_action)
             port.write_control_action(control)
+            self.save_data(data[0]+data[1]+data[2]+data[3])
         else:
             print("No hay dato")
                 
@@ -314,7 +341,7 @@ class sailboat_environment(ts.train_test_scenarios):
         for i in range(len(self.controllers)):
             if self.controllers[i].is_rudder_controller: # State coding, this metod works with MSTDP, choosen method
                 l = [min_rate]*int(self.hyperparam[0]*self.hyperparam[1]);
-                pitch = data[3]
+                pitch = data[4]
                 alpha = -data[6] # A variable for detect if the sailboat is on tacking zone
                 self.desired_heading = 180*np.arctan2(self.waypoints[self.state+1][1]-data[2],
                                                       self.waypoints[self.state+1][0]-data[1])/np.pi
@@ -359,7 +386,7 @@ class sailboat_environment(ts.train_test_scenarios):
                 elif self.desired_heading == 0:
                     self.desired_heading = 180
                 err_ang = (1-2*self.waypoints[self.state+1][2]) * self.angle_saturation(
-                                                                   ang=self.desired_heading - actual_heading, 
+                                                                   ang=self.desired_heading - actual_heading,
                                                                    min_ang=-180,
                                                                    max_ang=180)
                 n3 = 0
