@@ -15,13 +15,16 @@
         <include file="$(find gazebo_ros)/launch/empty_world.launch">
             <arg name="use_sim_time" value="true" />
             <arg name="debug" value="false" />
-            <arg name="gui" value="false" />
-            <arg name="paused" value="false"/>
+            <arg name="gui" value="true" />
+            <arg name="paused" value="true"/>
             <arg name="verbose" value="true"/>
             <arg name="world_name" value="$(find usv_sim)/world/empty.world"/>
         </include>
 
-				<!-- using parser  -->
+		<!-- launch uwsim -->
+		<node name="uwsim" pkg="uwsim" type="uwsim" args="$(arg disableShaders) --dataPath $(find usv_sim) --configfile scenes/sailboat_scenario2.xml" respawn="false" required="true"/>
+
+		<!-- using parser  -->
 		<include file="$(find usv_sim)/launch/scenarios_launchs/sailboat_scenario2_spawner.launch"/>
 		<!-- one include and one node to each vehicle -->
 		<node name="patrol" pkg="usv_navigation" type="patrol_pid_scene2.py" ns="sailboat" unless="$(arg gui)"/>

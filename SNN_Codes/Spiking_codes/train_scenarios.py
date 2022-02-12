@@ -22,29 +22,29 @@ class train_test_scenarios:
         self.waypoints = []
         
         if test:
-            # band = True
-            # center = [0,0]
-            # phi = 360/self.hyperparam[11]
-            # y = 0.5*self.hyperparam[9]
-            # x = y/np.tan(np.radians(0.5*phi))
-            # center[0] =  self.initial_point[0]-x
-            # center[1] =  self.initial_point[1]-y
-            # r = np.sqrt((self.initial_point[0]-center[0])**2+(self.initial_point[1]-center[1])**2)         
+            band = True
+            center = [0,0]
+            phi = 360/self.hyperparam[11]
+            y = 0.5*self.hyperparam[9]
+            x = y/np.tan(np.radians(0.5*phi))
+            center[0] =  self.initial_point[0]-x
+            center[1] =  self.initial_point[1]-y
+            r = np.sqrt((self.initial_point[0]-center[0])**2+(self.initial_point[1]-center[1])**2)         
             
-            # n = 2*self.hyperparam[11]
-            # theta = phi/2
+            n = 2*self.hyperparam[11]
+            theta = phi/2
             
-            # for i in range(n-1):
-            #     if band and i>= self.hyperparam[11]:
-            #         band = False
-            #         theta = 180 - 0.5*phi
-            #         center[0] = self.initial_point[0]+x
-            #         phi *= -1                   
+            for i in range(n-1):
+                if band and i>= self.hyperparam[11]:
+                    band = False
+                    theta = 180 - 0.5*phi
+                    center[0] = self.initial_point[0]+x
+                    phi *= -1                   
                     
-            #     theta += phi
-            #     xf = int(r*np.cos(np.radians(theta))+center[0])
-            #     yf = int(r*np.sin(np.radians(theta))+center[1])
-            #     self.waypoints.append([xf,yf,0])
+                theta += phi
+                xf = int(r*np.cos(np.radians(theta))+center[0])
+                yf = int(r*np.sin(np.radians(theta))+center[1])
+                self.waypoints.append([xf,yf,0])
             
             # self.waypoints=[
             #     [240.0, 100.0, 0],
@@ -69,11 +69,11 @@ class train_test_scenarios:
             #      [276.0, 100.0, 0],
             #      [240.0, 100.0, 0]
             #  ]
-            self.waypoints=[
-                [240.0, 105.0, 0.0],
-                #[270.0, 95.0, 0.0]
-                [270.0, 100.0, 0.0]
-            ]
+            # self.waypoints=[
+            #     [240.0, 105.0, 0.0],
+            #     #[270.0, 95.0, 0.0]
+            #     [270.0, 100.0, 0.0]
+            # ]
 
         elif self.scenario == 0 or self.scenario == 2: #Direct
             center = self.initial_point
