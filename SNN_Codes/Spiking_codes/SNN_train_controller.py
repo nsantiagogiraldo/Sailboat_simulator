@@ -51,7 +51,8 @@ class SNN_complete_train_test:
     def __init__(self):
         try:            
             f = open(self.direction+'/'+self.config_file, 'r')
-            info = f.read().split('\n')      
+            info = f.read().split('\n')     
+            self.permutation = int(info[19])
             for j in range(8):
                 for i in info[j].split(','):
                     if j==0:
@@ -68,7 +69,7 @@ class SNN_complete_train_test:
                         else:
                             self.hyperparam.append(int(i))
                     elif j==5:
-                        self.files_names.append(i)
+                        self.files_names.append(i+str(self.permutation))
                     elif j==6:
                         self.redundance.append(int(i))
                     else:
@@ -85,7 +86,6 @@ class SNN_complete_train_test:
             self.dt = int(info[16])
             self.test = int(info[17]) == 1
             self.PI_test = int(info[18]) == 1
-            self.permutation = int(info[19])
             
             self.control_signals=[self.hyperparam[0]*self.hyperparam[1],2*self.hyperparam[7]]
             self.neur = [[self.control_signals[0]*self.redundance[0],self.number_actuators],
@@ -167,11 +167,14 @@ class SNN_complete_train_test:
         self.config_SNN_test()
         self.sail_env.set_database(db_name = 'Test_'+str(self.permutation), path = self.direction, 
                                    structure = ['state','wind','x','y','speed',
-                                                'heeling'])
+                                                'heeling','rudder','sail'])
         band=False
-        while self.sail_env.state < len(self.sail_env.waypoints)-2:
+        while self.sail_env.state < len(self.sail_env.waypoints)-1:
             if not band:
                 band=self.p.open_port()
+            elif band != 2:
+                band = 2
+                self.p.write_control_action([0,0,0,1000])
             else:
                 data=self.p.read_data_sensor()
                 if not isinstance(data,bool):
@@ -180,7 +183,7 @@ class SNN_complete_train_test:
                     self.p.write_control_action(control_action)
                 else:
                     print("No data")
-        self.p.write_control_action([0,0,0,1000])
+        
                     
     def test_PI(self):
         self.change_simulation_type(0)
@@ -188,7 +191,7 @@ class SNN_complete_train_test:
                                    structure = ['state','wind','x','y','speed',
                                                 'heeling'])
         band=False
-        while self.sail_env.state < len(self.sail_env.waypoints)-2:
+        while self.sail_env.state < len(self.sail_env.waypoints)-1:
             if not band:
                 band=self.p.open_port()
             else:

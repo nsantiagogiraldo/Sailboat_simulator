@@ -54,7 +54,7 @@ class sailboat_environment(ts.train_test_scenarios):
     def set_database(self,db_name,path,structure):
         self.base = db.text_files(new_file = True, file_name = db_name, path = path, structure = structure) 
         
-    def save_data(self,data):
+    def save_data(self,data,control_action = 0):
         real_wind_angle = self.angle_saturation(ang = data[6] + data[5], 
                                                 min_ang=-180, 
                                                 max_ang=180)
@@ -67,7 +67,8 @@ class sailboat_environment(ts.train_test_scenarios):
         else:
             
             self.base.append_data([self.state+1,real_wind_angle,
-                                   data[1],data[2],self.actual_speed,data[3]])
+                                   data[1],data[2],self.actual_speed,data[3],
+                                   control_action[0], control_action[1]])
         
     def reward(self, data):
         
@@ -190,6 +191,7 @@ class sailboat_environment(ts.train_test_scenarios):
         return final
     
     def save_SNN_state(self):
+        band = True
         if(self.restart==1):
             self.state += 1
         if self.state == self.number_train:
@@ -199,11 +201,13 @@ class sailboat_environment(ts.train_test_scenarios):
             if self.scenario!=3:
                 self.train_scenario()
             self.state = 0
+            band = False
+        return band
             
             
     def aparent_wind(self, real_wind_angle, sailboat_speed, yaw):
         
-        i = sailboat_speed/(0.5144*2.2)
+        i = sailboat_speed/(1*3.3)
         theta = np.arctan2(np.sin(np.pi*real_wind_angle/180)-i*np.sin(np.pi*yaw/180),
                            np.cos(real_wind_angle)-i*np.cos(yaw))
         
@@ -270,46 +274,44 @@ class sailboat_environment(ts.train_test_scenarios):
 
     def environment_step(self, data, max_rate, min_rate):
         
-        control_action = [0,0,0,0]
-        self.save_SNN_state()
-        if (self.scenario == self.prev_scenario) and self.scenario!=3:
-            self.control_inputs(data = data, max_rate = max_rate, min_rate = min_rate)
-            self.calculate_reward(data = data)
-            for i in range(len(self.controllers)):
-                control_action[i] = int(self.controllers[i].train_episode(n_data = self.n_data[i],
-                                                                          reward = self.rewards[i]))
-            control_action[3] = self.is_finish()
-            self.is_restart([data[1],data[2]], control_action[3])
-            self.prev_angle = control_action[1]
-            self.prev_sail_objective = self.sail_aproximation(prev_yaw=data[5])
-            #control_action[1] = self.prev_sail_objective
-            control_action[2] = control_action[1]
-            control_action[3] = cp.copy(self.restart)
-            #print(control_action[0])
-            if self.restart == 1 or self.restart == 2:
-                control_action[3] = 2
-                self.epoch += 1
-            self.save_data(data)
-        elif self.scenario!=3:
+        control_action = [0,0,0,0]     
+        self.control_inputs(data = data, max_rate = max_rate, min_rate = min_rate)
+        self.calculate_reward(data = data)
+        for i in range(len(self.controllers)):
+            control_action[i] = int(self.controllers[i].train_episode(n_data = self.n_data[i],
+                                                                      reward = self.rewards[i]))
+        control_action[3] = self.is_finish()
+        self.is_restart([data[1],data[2]], control_action[3])
+        self.prev_angle = control_action[1]
+        self.prev_sail_objective = self.sail_aproximation(prev_yaw=data[5])
+        #control_action[1] = self.prev_sail_objective
+        control_action[2] = control_action[1]
+        control_action[3] = cp.copy(self.restart)
+        act_state = self.save_SNN_state()
+        if (self.restart == 1 or self.restart == 2) and act_state:
+            control_action[3] = 2
+            self.epoch += 1
+        elif not act_state:
             control_action[3] = 200
             self.prev_scenario += 1
+        self.save_data(data)
         return control_action  
     
     def environment_test(self, data, max_rate, min_rate):
         control_action = [0,0,0,0]
+        self.control_inputs(data = data, max_rate = max_rate, min_rate = min_rate)
+        for i in range(len(self.controllers)):
+            control_action[i] = int(self.controllers[i].train_episode(n_data = self.n_data[i],
+                                                                      reward = 0))
+        control_action[3] = self.is_finish()
+        self.restart = cp.copy(control_action[3])
+        control_action[2] = control_action[1]
+        self.save_data(data,control_action)
         if(self.restart==1):
             self.state += 1
             self.tack_angle_logic [0] = -1000
             self.tack_angle_logic [1] = -1000
             self.tack = False
-        self.control_inputs(data = data, max_rate = max_rate, min_rate = min_rate)
-        for i in range(len(self.controllers)):
-            control_action[i] = int(self.controllers[i].train_episode(n_data = self.n_data[i],
-                                                                      reward = self.rewards[i]))
-        control_action[3] = self.is_finish()
-        self.restart = cp.copy(control_action[3])
-        control_action[2] = control_action[1]
-        self.save_data(data)
         return control_action
     
     def environment_PI_test(self, port):

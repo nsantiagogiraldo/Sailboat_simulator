@@ -17,6 +17,7 @@ class train_test_scenarios:
     scenario = 0
     controllers = []
     min_distance = 2
+    previous = [0,0]
     
     def train_scenario(self, test = False):
         self.waypoints = []
@@ -24,20 +25,22 @@ class train_test_scenarios:
         if test:
             band = True
             center = [0,0]
+            if self.hyperparam[4] == 0:
+                self.hyperparam[2] = self.previous[0]
+                self.hyperparam[4] = self.previous[1]
             phi = 360/self.hyperparam[11]
-            y = 0.5*self.hyperparam[9]
-            x = y/np.tan(np.radians(0.5*phi))
+            x = self.hyperparam[9]
             center[0] =  self.initial_point[0]-x
-            center[1] =  self.initial_point[1]-y
+            center[1] =  self.initial_point[1]
             r = np.sqrt((self.initial_point[0]-center[0])**2+(self.initial_point[1]-center[1])**2)         
             
             n = 2*self.hyperparam[11]
-            theta = phi/2
+            theta = 0
             
             for i in range(n-1):
                 if band and i>= self.hyperparam[11]:
                     band = False
-                    theta = 180 - 0.5*phi
+                    theta = 180 
                     center[0] = self.initial_point[0]+x
                     phi *= -1                   
                     
@@ -80,7 +83,8 @@ class train_test_scenarios:
             n = self.hyperparam[14+(self.scenario == 2)]
             theta = np.pi/2
             r = 25
-            
+            self.previous[0] = self.hyperparam[2]
+            self.previous[1] = self.hyperparam[4] 
             self.hyperparam[2] = 0
             self.hyperparam[4] = 0
             if self.scenario ==2:
@@ -114,3 +118,4 @@ class train_test_scenarios:
         if not test:
             np.random.shuffle(self.waypoints)
         self.waypoints.insert(0, self.initial_point)
+        self.waypoints.insert(len(self.waypoints), self.initial_point)
