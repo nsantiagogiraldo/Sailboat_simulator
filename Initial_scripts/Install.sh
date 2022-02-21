@@ -1,6 +1,8 @@
 #!/bin/bash
 cd /home/nelson
 mkdir -p Documentos/Ubuntu_master
+cd Documentos/Ubuntu_master
+git clone https://github.com/nsantiagogiraldo/Sailboat_simulator.git
 
 rm /home/nelson/catkin_ws/src/usv_sim_lsa/usv_sim/xacro/boat_subdivided4.xacro
 rm /home/nelson/catkin_ws/src/usv_sim_lsa/usv_sim/xacro/sailboat.xacro
@@ -31,4 +33,5 @@ cp /home/nelson/Documentos/Ubuntu_master/Initial_scripts/start_experiment_D.sh /
 cp /home/nelson/Documentos/Ubuntu_master/Initial_scripts/Velero_D.sh /home/nelson/Velero.sh
 cp /home/nelson/Documentos/Ubuntu_master/Initial_scripts/Puerto_serie.sh /home/nelson
 cp /home/nelson/Documentos/Ubuntu_master/Initial_scripts/Anaconda_D.sh /home/nelson/Anaconda.sh
+
 
