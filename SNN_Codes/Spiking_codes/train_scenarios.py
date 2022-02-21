@@ -82,7 +82,7 @@ class train_test_scenarios:
             center = self.initial_point
             n = self.hyperparam[14+(self.scenario == 2)]
             theta = np.pi/2
-            r = 25
+            r = 15
             self.previous[0] = self.hyperparam[2]
             self.previous[1] = self.hyperparam[4] 
             self.hyperparam[2] = 0
@@ -101,7 +101,7 @@ class train_test_scenarios:
             center = self.initial_point # Turn the wind. Tacking
             n = self.hyperparam[16]
             theta=np.pi/2
-            r = 25
+            r = 20
             #self.controllers[0].spiking_controller.learning = False
             self.hyperparam[2] = 180
             self.hyperparam[4] = 0

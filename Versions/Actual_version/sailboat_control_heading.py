@@ -73,7 +73,7 @@ def talker_ctrl():
     rate = rospy.Rate(rate_value) # 0.5Hz
     # publishes to thruster and rudder topics
     pub_sail = rospy.Publisher('sail/angleLimits', Float64, queue_size=10)
-    #pub_sail_2 = rospy.Publisher('sail_2/angleLimits', Float64, queue_size=10)
+    pub_sail_2 = rospy.Publisher('sail_2/angleLimits', Float64, queue_size=10)
     pub_rudder = rospy.Publisher('joint_setpoint', JointState, queue_size=10)
     pub_result = rospy.Publisher('move_usv/result', Float64, queue_size=10)
     pub_heading = rospy.Publisher('currentHeading', Float64, queue_size=10)
@@ -98,7 +98,7 @@ def talker_ctrl():
                 pub_rudder.publish(final[0])
 	        pub_sail.publish(final[1])
 		counter = 0
-                #pub_sail_2.publish(final[2])
+                pub_sail_2.publish(final[2])
             pub_result.publish(result)
             pub_heading.publish(currentHeading)
             pub_windDir.publish(windDir)
