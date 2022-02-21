@@ -1,0 +1,34 @@
+#!/bin/bash
+cd /home/nelson
+mkdir -p Documentos/Ubuntu_master
+
+rm /home/nelson/catkin_ws/src/usv_sim_lsa/usv_sim/xacro/boat_subdivided4.xacro
+rm /home/nelson/catkin_ws/src/usv_sim_lsa/usv_sim/xacro/sailboat.xacro
+rm  /home/nelson/Documentos/Ubuntu_master/Versions/Actual_version/sailboat_control_heading.py
+rm /home/nelson/catkin_ws/src/usv_sim_lsa/usv_dynamics/foil_dynamics_plugin/src/foil_dynamics_plugin.cpp
+rm /home/nelson/catkin_ws/src/usv_sim_lsa/usv_dynamics/foil_dynamics_plugin/include/foil_dynamics_plugin/foil_dynamics_plugin.h
+rm /home/nelson/catkin_ws/src/usv_sim_lsa/usv_navigation/scripts/patrol_pid_scene2.py
+rm /home/nelson/catkin_ws/src/usv_sim_lsa/usv_sim/config/sailboat.yaml
+rm /home/nelson/catkin_ws/src/usv_sim_lsa/usv_sim/launch/scenarios_launchs/sailboat_scenario2.launch
+rm /home/nelson/catkin_ws/src/usv_sim_lsa/usv_sim/scenes/sailboat_scenario2.xml
+
+cp  /home/nelson/Documentos/Ubuntu_master/Versions/Actual_version/boat_subdivided4.xacro /home/nelson/catkin_ws/src/usv_sim_lsa/usv_sim/xacro
+cp  /home/nelson/Documentos/Ubuntu_master/Versions/Actual_version/sailboat.xacro /home/nelson/catkin_ws/src/usv_sim_lsa/usv_sim/xacro
+cp  /home/nelson/Documentos/Ubuntu_master/Versions/Actual_version/communicate.py /home/nelson/catkin_ws/src/usv_sim_lsa/usv_base_ctrl/scripts
+cp  /home/nelson/Documentos/Ubuntu_master/Versions/Actual_version/sailboat_control_heading.py /home/nelson/catkin_ws/src/usv_sim_lsa/usv_base_ctrl/scripts
+cp  /home/nelson/Documentos/Ubuntu_master/Versions/Actual_version/text_file.py /home/nelson/catkin_ws/src/usv_sim_lsa/usv_base_ctrl/scripts
+cp  /home/nelson/Documentos/Ubuntu_master/Versions/Actual_version/Torpedo_keel.dae /home/nelson/catkin_ws/src/usv_sim_lsa/usv_sim/meshes/simpleHull3
+cp  /home/nelson/Documentos/Ubuntu_master/Versions/Actual_version/Torpedo_keel.obj /home/nelson/catkin_ws/src/usv_sim_lsa/usv_sim/meshes/simpleHull3
+cp  /home/nelson/Documentos/Ubuntu_master/Versions/Actual_version/Torpedo_keel.mlt /home/nelson/catkin_ws/src/usv_sim_lsa/usv_sim/meshes/simpleHull3
+cp /home/nelson/Documentos/Ubuntu_master/Versions/Actual_version/foil_dynamics_plugin.cpp /home/nelson/catkin_ws/src/usv_sim_lsa/usv_dynamics/foil_dynamics_plugin/src
+cp /home/nelson/Documentos/Ubuntu_master/Versions/Actual_version/foil_dynamics_plugin.h /home/nelson/catkin_ws/src/usv_sim_lsa/usv_dynamics/foil_dynamics_plugin/include/foil_dynamics_plugin
+cp /home/nelson/Documentos/Ubuntu_master/Versions/Actual_version/patrol_pid_scene2.py /home/nelson/catkin_ws/src/usv_sim_lsa/usv_navigation/scripts
+cp /home/nelson/Documentos/Ubuntu_master/Versions/Actual_version/sailboat.yaml /home/nelson/catkin_ws/src/usv_sim_lsa/usv_sim/config
+cp /home/nelson/Documentos/Ubuntu_master/Versions/Actual_version/sailboat_scenario2.launch /home/nelson/catkin_ws/src/usv_sim_lsa/usv_sim/launch/scenarios_launchs
+cp /home/nelson/Documentos/Ubuntu_master/Versions/Actual_version/sailboat_scenario2.xml /home/nelson/catkin_ws/src/usv_sim_lsa/usv_sim/scenes
+
+cp /home/nelson/Documentos/Ubuntu_master/Initial_scripts/start_experiment_D.sh /home/nelson/start_experiment.sh
+cp /home/nelson/Documentos/Ubuntu_master/Initial_scripts/Velero_D.sh /home/nelson/Velero.sh
+cp /home/nelson/Documentos/Ubuntu_master/Initial_scripts/Puerto_serie.sh /home/nelson
+cp /home/nelson/Documentos/Ubuntu_master/Initial_scripts/Anaconda_D.sh /home/nelson/Anaconda.sh
+
