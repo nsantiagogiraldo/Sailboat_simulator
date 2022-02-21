@@ -207,7 +207,7 @@ class sailboat_environment(ts.train_test_scenarios):
             
     def aparent_wind(self, real_wind_angle, sailboat_speed, yaw):
         
-        i = sailboat_speed/(1*3.3)
+        i = sailboat_speed/(1*2.2)
         theta = np.arctan2(np.sin(np.pi*real_wind_angle/180)-i*np.sin(np.pi*yaw/180),
                            np.cos(real_wind_angle)-i*np.cos(yaw))
         
