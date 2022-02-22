@@ -18,7 +18,7 @@
             <arg name="gui" value="false" />
             <arg name="paused" value="false"/>
             <arg name="verbose" value="true"/>
-            <arg name="world_name" value="$(find usv_sim)/world/empty.world"/>
+            <arg name="world_name" value="$(find usv_sim)/world/empty_accelerated.world"/>
         </include>
 
 		<!-- launch uwsim -->
