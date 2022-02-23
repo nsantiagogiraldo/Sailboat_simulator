@@ -89,7 +89,7 @@ class sailboat_environment(ts.train_test_scenarios):
                                            num_state = self.hyperparam[8])
                 
             self.rewards[k] = self.puntual_reward(real_state=real_st, desired_state=self.hyperparam[3+5*k]//2, 
-                                                  num_states = self.hyperparam[3+5*k])
+                                                  num_states = 2*self.hyperparam[3+5*k]-1)
             
     def normalize(self,data,vmax,vmin, A=1, B=0):
         fn=[]
@@ -284,7 +284,7 @@ class sailboat_environment(ts.train_test_scenarios):
         self.is_restart([data[1],data[2]], control_action[3])
         self.prev_angle = control_action[1]
         self.prev_sail_objective = self.sail_aproximation(prev_yaw=data[5])
-        #control_action[1] = self.prev_sail_objective
+        control_action[1] = self.prev_sail_objective
         control_action[2] = control_action[1]
         control_action[3] = cp.copy(self.restart)
         act_state = self.save_SNN_state()
@@ -295,6 +295,7 @@ class sailboat_environment(ts.train_test_scenarios):
             control_action[3] = 200
             self.prev_scenario += 1
         self.save_data(data)
+        print(control_action)
         return control_action  
     
     def environment_test(self, data, max_rate, min_rate):

@@ -145,6 +145,8 @@ Foil_Dynamics_Plugin::Init ()
 	std::cerr << "\n ----------- Foil_Dynamics_Plugin::init: type: " << this->linkType << " linkName: " << this->linkName;
 	current_subscriber_ = rosnode_.subscribe ("/gazebo/current", 1, &Foil_Dynamics_Plugin::ReadWaterCurrent, this);
 	this->updateConnection = event::Events::ConnectWorldUpdateBegin (boost::bind (&Foil_Dynamics_Plugin::OnUpdate, this));
+	//std::string topic = "/sail/angleLimits";
+	//this->angleLimits_subscriber = rosnode_.subscribe (topic, 1, &Foil_Dynamics_Plugin::ropeSimulator, this);
 
 	std::cerr << "\n compare to sail: " << this->linkType.compare ("sail");
 	if (this->linkType.compare ("sail") == 0)
@@ -384,9 +386,9 @@ void
 Foil_Dynamics_Plugin::OnUpdateSail ()
 {
 //gazebo::math::Angle (-this->angle)
-	this->joint->SetLowStop (2, gazebo::math::Angle (this->angle));
-        this->joint->SetHighStop (2, gazebo::math::Angle (this->angle));
-	
+	this->joint->SetLowStop(0, gazebo::math::Angle (this->angle));
+        this->joint->SetHighStop(0, gazebo::math::Angle (this->angle));
+	//std::cerr<<this->angle<<'\n';
 	math::Vector3 aw = this->wind - this->link->GetWorldLinearVel (this->cp);
 	if (aw.GetLength () <= 0.01)
 		return;
