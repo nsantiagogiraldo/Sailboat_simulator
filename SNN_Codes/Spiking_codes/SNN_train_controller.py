@@ -148,7 +148,8 @@ class SNN_complete_train_test:
                                                 'reward_sail','epoch','wind','x','y',
                                                 'speed'])
         band=False
-        while self.sail_env.scenario <= 2:
+        fail = False
+        while self.sail_env.scenario <= 2 and not fail:
             if not band:
                 band=self.p.open_port()
             else:
@@ -158,9 +159,11 @@ class SNN_complete_train_test:
                                                                     min_rate = self.min_freq)
                     self.p.write_control_action(control_action)
                     #self.sail_env.controllers[0].print_spikes(spike_ims=None, spike_axes=None)
+                    fail = self.failure(name = 'Train_'+str(self.permutation), number = 3600)
                 else:
                     print("No data")
         self.p.write_control_action([0,0,0,1000])
+        return fail
         
     def test_SNN(self):
         self.change_simulation_type(1)
@@ -169,7 +172,8 @@ class SNN_complete_train_test:
                                    structure = ['state','wind','x','y','speed',
                                                 'heeling','rudder','sail'])
         band=False
-        while self.sail_env.state < len(self.sail_env.waypoints)-1:
+        fail = False
+        while self.sail_env.state < len(self.sail_env.waypoints)-1 and not fail:
             if not band:
                 band=self.p.open_port()
             elif band != 2:
@@ -181,6 +185,7 @@ class SNN_complete_train_test:
                     control_action = self.sail_env.environment_test(data = data, max_rate = self.max_freq,
                                                                     min_rate = self.min_freq)
                     self.p.write_control_action(control_action)
+                    fail = self.failure(name = 'Test_'+str(self.permutation), number = 2000)
                 else:
                     print("No data")
         
@@ -213,3 +218,12 @@ class SNN_complete_train_test:
         else:
             self.test = False
             self.PI_test = False
+            
+    def failure(self,name,number):
+        fail = False
+        if self.sail_env.base.num_data>number:
+            file = open(self.direction+'/data_result/'+name+'.csv', 'w')
+            file.write('fail')
+            file.close()
+            fail=True
+        return fail

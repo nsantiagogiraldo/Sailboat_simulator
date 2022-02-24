@@ -8,3 +8,7 @@ chmod +x Velero.sh
 source Anaconda.sh
 cd Documentos/Ubuntu_master/SNN_Codes/Spiking_codes/
 python Experiments.py
+exit
+exit
+exit
+
