@@ -39,6 +39,9 @@ class sailboat_environment(ts.train_test_scenarios):
     base = ''
     learning = True
     epoch = 1
+    prev_rudder = 0
+    heading = 0
+    err_ang = 0
     
     def __init__(self, rudder_ctrl, sail_ctrl, vmax, vmin, hyperparam, path, learning = True):
         self.controllers.append(rudder_ctrl)
@@ -74,22 +77,29 @@ class sailboat_environment(ts.train_test_scenarios):
         
         for k in range(len(self.controllers)):
             if self.controllers[k].is_rudder_controller:            
-                heading = data[5]
-                real_st = self.real_action(real_value=heading,
-                                           desired_value = self.desired_heading,
+                real_st = self.real_action(real_value= -self.heading,
+                                           desired_value = self.prev_rudder,
                                            min_value = self.sensor_min[0],
                                            max_value = self.sensor_max[0],
-                                           num_state = self.hyperparam[3])            
+                                           num_state = 2*self.hyperparam[3]-2)            
+                
+                #                real_st = self.real_action(real_value= -self.heading,
+                     #                      desired_value = self.prev_rudder,
             else:
                               
                 real_st = self.real_action(real_value=self.prev_sail_objective, 
                                            desired_value = self.prev_angle, 
                                            min_value = self.sensor_min[1], 
                                            max_value = self.sensor_max[1], 
-                                           num_state = self.hyperparam[8])
+                                           num_state = 2*self.hyperparam[8]-2)
                 
-            self.rewards[k] = self.puntual_reward(real_state=real_st, desired_state=self.hyperparam[3+5*k]//2, 
-                                                  num_states = 2*self.hyperparam[3+5*k]-1)
+            self.rewards[k] = self.puntual_reward(real_state=real_st, desired_state=(self.hyperparam[3+5*k]-1), 
+                                                  num_states = 2*self.hyperparam[3+5*k]-2)
+            
+            
+        #self.rewards[0]*=3
+        #print(self.heading,real_st,self.rewards[0])
+
             
     def normalize(self,data,vmax,vmin, A=1, B=0):
         fn=[]
@@ -274,9 +284,10 @@ class sailboat_environment(ts.train_test_scenarios):
 
     def environment_step(self, data, max_rate, min_rate):
         
-        control_action = [0,0,0,0]     
+        control_action = [0,0,0,0]  
         self.control_inputs(data = data, max_rate = max_rate, min_rate = min_rate)
         self.calculate_reward(data = data)
+        self.heading = cp.copy(self.err_ang)
         for i in range(len(self.controllers)):
             control_action[i] = int(self.controllers[i].train_episode(n_data = self.n_data[i],
                                                                       reward = self.rewards[i]))
@@ -284,7 +295,9 @@ class sailboat_environment(ts.train_test_scenarios):
         self.is_restart([data[1],data[2]], control_action[3])
         self.prev_angle = control_action[1]
         self.prev_sail_objective = self.sail_aproximation(prev_yaw=data[5])
-        control_action[1] = self.prev_sail_objective
+        self.prev_rudder = control_action[0]
+        
+        #control_action[1] = self.prev_sail_objective
         control_action[2] = control_action[1]
         control_action[3] = cp.copy(self.restart)
         act_state = self.save_SNN_state()
@@ -295,7 +308,7 @@ class sailboat_environment(ts.train_test_scenarios):
             control_action[3] = 200
             self.prev_scenario += 1
         self.save_data(data)
-        print(control_action)
+
         return control_action  
     
     def environment_test(self, data, max_rate, min_rate):
@@ -313,6 +326,8 @@ class sailboat_environment(ts.train_test_scenarios):
             self.tack_angle_logic [0] = -1000
             self.tack_angle_logic [1] = -1000
             self.tack = False
+        control_action[1] = self.sail_aproximation(prev_yaw=data[5])
+        control_action[2] = control_action[1]
         return control_action
     
     def environment_PI_test(self, port):
@@ -388,18 +403,18 @@ class sailboat_environment(ts.train_test_scenarios):
                     self.desired_heading -= 180*self.desired_heading/np.abs(self.desired_heading)
                 elif self.desired_heading == 0:
                     self.desired_heading = 180
-                err_ang = (1-2*self.waypoints[self.state+1][2]) * self.angle_saturation(
+                self.err_ang = (1-2*self.waypoints[self.state+1][2]) * self.angle_saturation(
                                                                    ang=self.desired_heading - actual_heading,
                                                                    min_ang=-180,
                                                                    max_ang=180)
                 n3 = 0
-                if abs(err_ang)>=self.sensor_max[0]:
-                    err_ang = (self.sensor_max[0]-1)*err_ang/abs(err_ang)
+                if abs(self.err_ang)>=self.sensor_max[0]:
+                    self.err_ang = (self.sensor_max[0]-1)*self.err_ang/abs(self.err_ang)
                 if abs(pitch)>=self.sensor_max[2]:
                     pitch = (self.sensor_max[2]-1)*pitch/abs(pitch)
                 
-                n1 = ((err_ang+self.sensor_max[0])*self.hyperparam[0])//180
-                n2 = ((pitch+self.sensor_max[2])*2*self.hyperparam[1])//180
+                n1 = ((self.err_ang+self.sensor_max[0])*self.hyperparam[0])//(2*self.sensor_max[0])
+                n2 = ((pitch+self.sensor_max[2])*self.hyperparam[1])//(2*self.sensor_max[2])
         
                 l[int(self.hyperparam[0]*(self.hyperparam[1]*n3+n2)+n1)] = max_rate
                 self.n_data.append(l)
