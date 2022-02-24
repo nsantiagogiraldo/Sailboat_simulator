@@ -14,7 +14,7 @@ class train_test_scenarios:
     waypoints = []
     learning =  True
     number_train = 0
-    scenario = 0
+    scenario = 1
     controllers = []
     min_distance = 2
     previous = [0,0]
@@ -82,13 +82,13 @@ class train_test_scenarios:
             center = self.initial_point
             n = self.hyperparam[14+(self.scenario == 2)]
             theta = np.pi/2
-            r = 15
+            r = 20
             self.previous[0] = self.hyperparam[2]
             self.previous[1] = self.hyperparam[4] 
             self.hyperparam[2] = 0
             self.hyperparam[4] = 0
             if self.scenario ==2:
-                self.hyperparam[6] += 4
+                self.hyperparam[6] += 2
                 self.controllers[0].spiking_controller.learning = False
             
             for i in range(n):           
@@ -101,7 +101,7 @@ class train_test_scenarios:
             center = self.initial_point # Turn the wind. Tacking
             n = self.hyperparam[16]
             theta=np.pi/2
-            r = 20
+            r = 25
             #self.controllers[0].spiking_controller.learning = False
             self.hyperparam[2] = 180
             self.hyperparam[4] = 0
