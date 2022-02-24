@@ -14,7 +14,7 @@ class train_test_scenarios:
     waypoints = []
     learning =  True
     number_train = 0
-    scenario = 1
+    scenario = 0
     controllers = []
     min_distance = 2
     previous = [0,0]

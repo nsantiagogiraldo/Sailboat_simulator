@@ -145,15 +145,16 @@ Foil_Dynamics_Plugin::Init ()
 	std::cerr << "\n ----------- Foil_Dynamics_Plugin::init: type: " << this->linkType << " linkName: " << this->linkName;
 	current_subscriber_ = rosnode_.subscribe ("/gazebo/current", 1, &Foil_Dynamics_Plugin::ReadWaterCurrent, this);
 	this->updateConnection = event::Events::ConnectWorldUpdateBegin (boost::bind (&Foil_Dynamics_Plugin::OnUpdate, this));
-	//std::string topic = "/sail/angleLimits";
+	std::string topic = "/sail/angleLimits";
+	this->angleLimits_subscriber = rosnode_.subscribe (topic, 1, &Foil_Dynamics_Plugin::ropeSimulator, this);
+	//topic = "/sail_2/angleLimits";
 	//this->angleLimits_subscriber = rosnode_.subscribe (topic, 1, &Foil_Dynamics_Plugin::ropeSimulator, this);
-
-	std::cerr << "\n compare to sail: " << this->linkType.compare ("sail");
-	if (this->linkType.compare ("sail") == 0)
+	//std::cerr << "\n compare to sail: " << this->linkType.compare ("sail");
+	/*if (this->linkType.compare ("sail") == 0)
 	{
 		std::string topic = "/" + this->model->GetName () + "/angleLimits";
 		this->angleLimits_subscriber = rosnode_.subscribe (topic, 1, &Foil_Dynamics_Plugin::ropeSimulator, this);
-	}
+	}*/
 }
 
 void
