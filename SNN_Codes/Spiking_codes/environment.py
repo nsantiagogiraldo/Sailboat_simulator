@@ -97,7 +97,7 @@ class sailboat_environment(ts.train_test_scenarios):
                                                   num_states = 2*self.hyperparam[3+5*k]-2)
             
             
-        #self.rewards[0]*=3
+        self.rewards[0]*=3
         #print(self.heading,real_st,self.rewards[0])
 
             
