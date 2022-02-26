@@ -33,5 +33,6 @@ cp /home/nelson/Documentos/Ubuntu_master/Initial_scripts/Velero_D.sh /home/nelso
 cp /home/nelson/Documentos/Ubuntu_master/Initial_scripts/Puerto_serie.sh /home/nelson
 cp /home/nelson/Documentos/Ubuntu_master/Initial_scripts/Anaconda_D.sh /home/nelson/Anaconda.sh
 
+conda install pyserial
 
 
