@@ -25,6 +25,7 @@ class train_test_scenarios:
         if test:
             band = True
             center = [0,0]
+            self.min_distance = 2
             if self.hyperparam[4] == 0:
                 self.hyperparam[2] = self.previous[0]
                 self.hyperparam[4] = self.previous[1]

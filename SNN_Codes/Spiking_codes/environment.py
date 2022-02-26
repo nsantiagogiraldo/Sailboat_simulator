@@ -78,12 +78,16 @@ class sailboat_environment(ts.train_test_scenarios):
         for k in range(len(self.controllers)):
             if self.controllers[k].is_rudder_controller:            
                 real_st = self.real_action(real_value= -self.heading,
-                                           desired_value = self.prev_rudder,
-                                           min_value = self.sensor_min[0],
-                                           max_value = self.sensor_max[0],
-                                           num_state = 2*self.hyperparam[3]-2)            
-                
-                #                real_st = self.real_action(real_value= -self.heading,
+                                            desired_value = self.prev_rudder,
+                                            min_value = self.sensor_min[0],
+                                            max_value = self.sensor_max[0],
+                                            num_state = 2*self.hyperparam[3]-2)            
+                # real_st = self.real_action(real_value= data[5],
+                #                            desired_value = self.desired_heading,
+                #                            min_value = self.sensor_min[0],
+                #                            max_value = self.sensor_max[0],
+                #                            num_state = 2*self.hyperparam[3]-2) 
+                     #                real_st = self.real_action(real_value= -self.heading,
                      #                      desired_value = self.prev_rudder,
             else:
                               
@@ -326,8 +330,8 @@ class sailboat_environment(ts.train_test_scenarios):
             self.tack_angle_logic [0] = -1000
             self.tack_angle_logic [1] = -1000
             self.tack = False
-        control_action[1] = self.sail_aproximation(prev_yaw=data[5])
-        control_action[2] = control_action[1]
+        # control_action[1] = self.sail_aproximation(prev_yaw=data[5])
+        # control_action[2] = control_action[1]
         return control_action
     
     def environment_PI_test(self, port):
