@@ -159,7 +159,7 @@ class SNN_complete_train_test:
                                                                     min_rate = self.min_freq)
                     self.p.write_control_action(control_action)
                     #self.sail_env.controllers[0].print_spikes(spike_ims=None, spike_axes=None)
-                    fail = self.failure(name = 'Train_'+str(self.permutation), number = 3600)
+                    fail = self.failure(name = 'Train_'+str(self.permutation), number = 4500)
                 else:
                     print("No data")
         self.p.write_control_action([0,0,0,1000])
@@ -185,7 +185,7 @@ class SNN_complete_train_test:
                     control_action = self.sail_env.environment_test(data = data, max_rate = self.max_freq,
                                                                     min_rate = self.min_freq)
                     self.p.write_control_action(control_action)
-                    fail = self.failure(name = 'Test_'+str(self.permutation), number = 2000)
+                    fail = self.failure(name = 'Test_'+str(self.permutation), number = 2500)
                 else:
                     print("No data")
         

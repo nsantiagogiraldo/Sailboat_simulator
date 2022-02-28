@@ -102,7 +102,7 @@ class spiking_neuron:
         name_ctrl = ['sail','rudder']
         try:
             self.spiking_controller.save(path+'/'+self.network_name+".pt")
-            arq_str = str(self.network_architecture)
+            arq_str = str(path+'/'+self.network_architecture)
             f = open(self.network_name + '_connection.txt', 'w')
             f.write(str(self.max_spikes)+'\n'+str(self.min_spikes)+'\n'+arq_str[1:len(arq_str)-1]+'\n'
                     +str(self.time_network)+'\n'+str(self.redundance)+'\n'+str(self.dt)+'\n'+self.coding+
@@ -134,7 +134,7 @@ class spiking_neuron:
                     wc+=1
             layer = list(network.layers.keys())
                     
-            f = open(self.network_name + '_connection.txt', 'r')
+            f = open(path+'/'+self.network_name + '_connection.txt', 'r')
             info = f.read().split('\n')
             max_spikes = int(info[0])
             min_spikes = int(info[1])
