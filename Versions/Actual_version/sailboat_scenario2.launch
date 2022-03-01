@@ -21,7 +21,7 @@
             <arg name="world_name" value="$(find usv_sim)/world/empty_accelerated.world"/>
         </include>
 
-	<node name="uwsim" pkg="uwsim" type="uwsim" args="$(arg disableShaders) --dataPath $(find usv_sim) --configfile scenes/sailboat_scenario2.xml" respawn="false" required="true"/>
+	<node name="uwsim" pkg="uwsim" type="uwsim" args="$(arg disableShaders) --dataPath $(find usv_sim) --configfile scenes/sailboat_scenario2.xml" respawn="false" required="false"/>
 
 		<!-- using parser  -->
 		<include file="$(find usv_sim)/launch/scenarios_launchs/sailboat_scenario2_spawner.launch"/>
