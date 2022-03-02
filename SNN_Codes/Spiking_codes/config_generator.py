@@ -25,8 +25,8 @@ for a in out_rudder:
                         rudder_init = 2*c//e
                         file = open(path+'/'+name+str(i)+'.txt','w')
                         text = (str(c)+', '+str(d)+', '+'30\n'+str(-c)+', '+str(-d)+', '+'-30\n'
-                                +'45, 90,\n-45, -90\n'
-                                +str(rudder_init)+' , 1, 120, '+str(a)+', 60, 70, 4, '+str(f)+', '+str(b)+', 14, 100, 6, 0.47, 45, 10, 10, 3\n'
+                                +'45, 90\n-45, -90\n'
+                                +str(rudder_init)+', 1, 120, '+str(a)+', 60, 70, 4, '+str(f)+', '+str(b)+', 14, 100, 6, 0.47, 45, 10, 10, 3\n'
                                 +'rudder,sail\n2, 2\n0, 0\n1\n0\n240\npoisson\n10\n0\n1\n500\n1\n1\n0\n'+str(i)
                                 )
                         file.write(text)
