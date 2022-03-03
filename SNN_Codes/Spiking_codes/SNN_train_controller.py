@@ -160,6 +160,8 @@ class SNN_complete_train_test:
                     self.p.write_control_action(control_action)
                     #self.sail_env.controllers[0].print_spikes(spike_ims=None, spike_axes=None)
                     fail = self.failure(name = 'Train_'+str(self.permutation), number = 4500)
+                    if fail:
+                        self.failure(name = 'Test_'+str(self.permutation), number = -1)
                 else:
                     print("No data")
         self.p.write_control_action([0,0,0,1000])

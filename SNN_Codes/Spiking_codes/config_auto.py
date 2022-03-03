@@ -6,7 +6,7 @@ Created on Mon Feb 28 11:01:25 2022
 @author: nelson
 """
 
-name = '/home/nelson/Documentos/Ubuntu_master/SNN_Codes/trained.txt'
+name = '/home/nsantiago/trained.txt'
 file = open(name,'r')
 info = file.read().split('\n')
 file.close()
@@ -19,7 +19,7 @@ for i in info:
         number_test.append(int(u_file))
 
 for i in range(int(info[0])):
-    if number_test.count(i) == 0:
+    if number_test.count(i+1) == 0:
         simulate+=(str(i+1)+'\n')
 
 file = open(name,'w')

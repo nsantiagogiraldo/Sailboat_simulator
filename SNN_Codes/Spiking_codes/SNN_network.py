@@ -101,9 +101,9 @@ class spiking_neuron:
         j=True
         name_ctrl = ['sail','rudder']
         try:
-            self.spiking_controller.save(path+'/'+self.network_name+".pt")
-            arq_str = str(path+'/'+self.network_architecture)
-            f = open(self.network_name + '_connection.txt', 'w')
+            self.spiking_controller.save(path+'/control/'+self.network_name+".pt")
+            arq_str = str(self.network_architecture)
+            f = open(path+'/control/'+self.network_name + '_connection.txt', 'w')
             f.write(str(self.max_spikes)+'\n'+str(self.min_spikes)+'\n'+arq_str[1:len(arq_str)-1]+'\n'
                     +str(self.time_network)+'\n'+str(self.redundance)+'\n'+str(self.dt)+'\n'+self.coding+
                     '\n'+str(self.max_weigth)+'\n'+str(self.min_weigth)+'\n'+str(self.max_out)+'\n'+
@@ -123,7 +123,7 @@ class spiking_neuron:
         arq=[]
         try:
             network = Network() 
-            network = load(path+'/'+self.network_name+'.pt',learning=learning)
+            network = load(path+'/control/'+self.network_name+'.pt',learning=learning)
             monitors=network.monitors;
             for i in monitors:
                 if i[0]=='S':
@@ -134,7 +134,7 @@ class spiking_neuron:
                     wc+=1
             layer = list(network.layers.keys())
                     
-            f = open(path+'/'+self.network_name + '_connection.txt', 'r')
+            f = open(path+'/control/'+self.network_name + '_connection.txt', 'r')
             info = f.read().split('\n')
             max_spikes = int(info[0])
             min_spikes = int(info[1])
