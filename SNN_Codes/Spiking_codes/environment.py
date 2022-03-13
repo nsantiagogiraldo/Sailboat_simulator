@@ -87,8 +87,7 @@ class sailboat_environment(ts.train_test_scenarios):
                 #                            min_value = self.sensor_min[0],
                 #                            max_value = self.sensor_max[0],
                 #                            num_state = 2*self.hyperparam[3]-2) 
-                     #                real_st = self.real_action(real_value= -self.heading,
-                     #                      desired_value = self.prev_rudder,
+                                
             else:
                               
                 real_st = self.real_action(real_value=self.prev_sail_objective, 
@@ -102,6 +101,7 @@ class sailboat_environment(ts.train_test_scenarios):
             
             
         self.rewards[0]*=3
+        #self.rewards[0]*=0.6
         #print(self.heading,real_st,self.rewards[0])
 
             
@@ -363,7 +363,8 @@ class sailboat_environment(ts.train_test_scenarios):
         for i in range(len(self.controllers)):
             if self.controllers[i].is_rudder_controller: # State coding, this metod works with MSTDP, choosen method
                 l = [min_rate]*int(self.hyperparam[0]*self.hyperparam[1]);
-                pitch = data[4]
+                #pitch = data[4]
+                pitch = -data[6]
                 alpha = -data[6] # A variable for detect if the sailboat is on tacking zone
                 self.desired_heading = 180*np.arctan2(self.waypoints[self.state+1][1]-data[2],
                                                       self.waypoints[self.state+1][0]-data[1])/np.pi
