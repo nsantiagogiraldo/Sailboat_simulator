@@ -9,6 +9,7 @@ Created on Tue Mar 15 12:37:28 2022
 import numpy as np
 import matplotlib.pyplot as plt
 
+
 def files_list(num_experiments):
     test_files = []
     train_files = []
@@ -62,15 +63,36 @@ def config_plot(data,axisX,axisY,title,graph_type):
         plt.annotate('Real Wind', xy=(210, 91))
         plt.plot(data[0],data[1],data[0],data[1],'o')
         
+def config_subplots(num,data,axisX,axisY,title,graph_type,x=0):
+    dim = int(np.ceil(np.sqrt(num)))
+    fig, axs = plt.subplots(dim,dim)
+    fig.set_size_inches(10,7)
+    if graph_type == 'points':
+        x = np.array(range(np.size(data[0])))+1
+    
+    for i in range(dim):
+        for j in range(dim):
+            axs[i, j].set_title(title[dim*i+j])
+            if graph_type == 'points':
+                axs[i, j].plot(x, data[dim*i+j], 'o')
+            elif graph_type == 'Vbar':
+                axs[i, j].bar(x[dim*i+j],data[dim*i+j])
+                for k in range(len(data[dim*i+j])):
+                    axs[i, j].annotate(str(data[dim*i+j][k]),(k-0.3,data[dim*i+j][k]+1))         
+    for ax in axs.flat:
+        ax.set(xlabel=axisX, ylabel=axisY)
+    fig.tight_layout()
+    return fig
+        
 def config_bar_data(data,start,finish,intervals):
     limits = [start]
     x = []
-    step = (finish - start)//intervals
-    while limits[-1]<finish:
+    step = (finish - start)/intervals
+    while limits[-1]<finish-0.1:
         limits.append(limits[-1]+step)
     y, xn = np.histogram(data, bins=limits)
     for i in range(len(xn)-1):
-        x.append(str(xn[i]))
+        x.append(str((round(xn[i],1))))
     return x,y
 
 def environment_points(test):
@@ -111,31 +133,66 @@ def environment_points(test):
     
     return waypoints
 
+def rect_equiation(x,y):
+    m = (y[1]-y[0])/(x[1]-x[0])
+    b = y[1] - m*x[1]
+    
+    return [m,b]
 
-def error_data(test_files,path):
-    data = []
+def error_data(file,path):
+    x = np.arange(0)
+    y = np.arange(0)
+    error = np.arange(0)
+    final_error = np.arange(0)
     scenario = [1,1]
-    file = test_files[0]
     f = open(path+'/'+file,'r')
     info = f.read().split('\n')
-    for i in range(len(info)):
-        split_info = info[i].split(',',1)
-        scenario[1] = int(split_info[1][0])
-        
+    env_points = environment_points(test=True)
+    ideal = rect_equiation(env_points[0][0:2], env_points[1][0:2])
+    for i in range(len(info)-2):
+        split_info = info[i+1].split(',',2)
+        scenario[1] = int(split_info[1])
+        if (scenario[1]+1) % 3 != 0:
+            if scenario[1] != scenario[0]:
+                real = ideal[0]*x+ideal[1]
+                error = np.append(error,error_metric(real = real, pred = y, error_type = 'MAE'))
+                x = np.arange(0)
+                y = np.arange(0)
+                ideal = rect_equiation(env_points[0][scenario[0]:scenario[1]+1], env_points[1][scenario[0]:scenario[1]+1])
+            data = split_info[2].split(',')
+            x = np.append(x,float(data[1]))
+            y = np.append(y,float(data[2]))
             
-            
+        scenario[0] = scenario[1]
+    real = ideal[0]*x+ideal[1]
+    error = np.append(error,error_metric(real = real, pred = y, error_type = 'MAE'))
+    for i in range(4):
+        final_error = np.append(final_error,np.mean([error[i],error[7-i]]))
     
-def error_metric(data):
-    y_mean = np.mean(data)
-    MAE = 0
-    for i in data:
-        MAE += np.abs(i-y_mean)
-    MAE /= len(data)
-    return MAE
+    return final_error
+
+def error_graphs(test_files,path):
+    complete = error_data(test_files[0],path)
+    for i in range(len(test_files)-1):
+        complete = np.vstack((complete,error_data(test_files[i+1],path)))
+    return complete
+    
+def error_metric(real, pred, error_type):
+    ERROR = pred - real
+    if error_type == 'MAE':
+        ERROR = np.sum(np.abs(ERROR))/np.size(ERROR)
+    elif error_type == 'MAPE':
+        ERROR = np.sum(np.abs(ERROR)/real)/np.size(ERROR)
+    elif error_type == 'MSE':
+        ERROR = np.sum(ERROR*ERROR)/np.size(ERROR)
+    elif error_type == 'MSPE':
+        ERROR = np.sum(ERROR*ERROR/(real*real))/np.size(ERROR)
+    return ERROR
 
 path = '/home/nelson/Documentos/Ubuntu_master/SNN_Codes/results/data'
-images = ['graph_times.png','histogram_times.png','Test_obj_points.png']
-image = 2
+images = ['graph_times.png','histogram_times.png','Test_obj_points.png','Error_graphs.png',
+          'Histogram_errors.png']
+image = 4
 num_experiments = 1024
 
 test_files,train_files = files_list(num_experiments)
@@ -169,17 +226,39 @@ try:
         y = np.array(obj_points[1])
         config_plot([x,y], axisX, axisY, title, 'linear_points')
     elif image == 3:
-        axisX = 'X'
-        axisY = 'Y'
-        title = 'Test objective points'
-        obj_points = environment_points(True)
-        x = np.array(obj_points[0])
-        y = np.array(obj_points[1])
-        config_plot([x,y], axisX, axisY, title, 'linear_points')
-        plt.annotate('Real Wind', xy=(213, 90), xytext=(210, 90),
-                     arrowprops=dict(facecolor='black', shrink=0.0),
-                     )
-    plt.savefig(images[image])
+        axisX = 'Number of designing point'
+        axisY = 'MAPE'
+        title = ['MAPE for navigation type 1','MAPE for navigation type 2',
+                 'MAPE for navigation type 3','MAPE for navigation type 4']
+        error = error_graphs(not_fail_test, path)
+        error = np.transpose(error)
+        fig = config_subplots(4,error,axisX,axisY,title,'points')
+        fig.savefig(images[image])
+    elif image == 4:
+        inf = [2,0,0,0]
+        sup = [16,10,6,4]
+        step = [14,14,14,14]
+        axisX = 'MAPE'
+        axisY = 'Number of experiments'
+        title = ['Number of test experiments for each MAPE (type 1)',
+                 'Number of test experiments for each MAPE (type 2)',
+                 'Number of test experiments for each MAPE (type 3)',
+                 'Number of test experiments for each MAPE (type 4)']
+        error = error_graphs(not_fail_test, path)
+        error = np.transpose(error)
+        x,y = config_bar_data(error[0],2,16,14)
+        xa = np.array(x)
+        ya = np.array(y)
+        for i in range(3):
+            x,y = config_bar_data(error[i+1],inf[i+1],sup[i+1],step[i+1])
+            xa = np.append(xa,np.array(x))
+            ya = np.append(ya,np.array(y))
+        xa.resize(4,14)
+        ya.resize(4,14)
+        fig = config_subplots(4,ya,axisX,axisY,title,'Vbar',xa)
+        fig.savefig(images[image])
+    if image != 3 and image != 4:
+        plt.savefig(images[image])
     
     
 except:
