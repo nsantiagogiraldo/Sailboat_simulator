@@ -349,7 +349,50 @@ class sailboat_environment(ts.train_test_scenarios):
             self.save_data(data[0]+data[1]+data[2]+data[3])
         else:
             print("No hay dato")
-                
+    
+    def environment_Viel2019_test(self, data):
+        control_action = [0,0,0,0]
+        actions = self.control_inputs_Viel(data = data)
+        c = self.Viel2019(delta_rmax = np.radians(45), 
+                          delta_smax = np.radians(90), 
+                          d_theta = actions[0], 
+                          theta = actions[1], 
+                          phi = actions[2], 
+                          sigma_awind = actions[3], 
+                          Vi_asterisc = 1, 
+                          epsilon = 0)
+        control_action[0] = c[0]
+        control_action[1] = c[1]
+        control_action[3] = self.is_finish()
+        self.restart = cp.copy(control_action[3])
+        control_action[2] = control_action[1]
+        self.save_data(data,control_action)
+        if(self.restart==1):
+            self.state += 1
+            self.tack_angle_logic [0] = -1000
+            self.tack_angle_logic [1] = -1000
+            self.tack = False
+        return control_action
+            
+    def Viel2019(self,delta_rmax,delta_smax,d_theta,theta,phi,sigma_awind,Vi_asterisc,epsilon):
+    #The desired acceleration Vi* > 0, for all experiments
+        if np.cos(theta-phi) - np.cos(epsilon) >= 0:
+            Theta = phi
+        else:
+            Theta = theta
+        if np.cos(Theta-d_theta) >= 0:
+            delta_r = delta_rmax*np.sin(Theta-d_theta)
+        else:
+            delta_r = delta_rmax*np.sign(np.sin(Theta-d_theta))
+       
+        delta_s_opt = 0.25*np.pi*(np.cos(sigma_awind)+1)
+        delta_sm = min([np.abs(np.pi-np.abs(sigma_awind)),delta_smax])
+        if Vi_asterisc>0:
+            delta_s = -np.sign(sigma_awind)*min([np.abs(delta_s_opt),delta_sm])
+        elif Vi_asterisc<0:
+            delta_s = -np.sign(sigma_awind)*delta_sm
+   
+        return np.degrees([delta_r,delta_s])
     
     def control_inputs(self, data, max_rate, min_rate):
         self.distance = np.sqrt((data[1]-self.waypoints[self.state+1][0])**2+(data[2]-self.waypoints[self.state+1][1])**2)
@@ -360,6 +403,7 @@ class sailboat_environment(ts.train_test_scenarios):
                                                 min_ang=-180, 
                                                 max_ang=180)
         self.actual_speed = np.sqrt(data[7]**2+data[8]**2)
+        
         for i in range(len(self.controllers)):
             if self.controllers[i].is_rudder_controller: # State coding, this metod works with MSTDP, choosen method
                 l = [min_rate]*int(self.hyperparam[0]*self.hyperparam[1]);
@@ -437,3 +481,60 @@ class sailboat_environment(ts.train_test_scenarios):
                 n2 = self.waypoints[self.state+1][2]
                 l[int(self.hyperparam[7]*n2+n)] = max_rate
                 self.n_data.append(l)
+                
+    def control_inputs_Viel(self, data):
+        self.distance = np.sqrt((data[1]-self.waypoints[self.state+1][0])**2+(data[2]-self.waypoints[self.state+1][1])**2)
+        
+        actual_heading = data[5] 
+        real_wind_angle = self.angle_saturation(ang = data[6] + actual_heading, 
+                                                min_ang=-180, 
+                                                max_ang=180)
+        self.actual_speed = np.sqrt(data[7]**2+data[8]**2)
+        angle_speed = actual_heading#np.arctan2(data[8], data[7])
+        angle_apparent = self.aparent_wind(real_wind_angle = real_wind_angle, 
+                  sailboat_speed = self.actual_speed,
+                  yaw = actual_heading)
+        angle_apparent = self.angle_saturation(ang = angle_apparent - angle_speed, 
+                                               min_ang=-180, 
+                                               max_ang=180)
+        #pitch = data[4]
+        alpha = -data[6] # A variable for detect if the sailboat is on tacking zone
+        self.desired_heading = 180*np.arctan2(self.waypoints[self.state+1][1]-data[2],
+                                              self.waypoints[self.state+1][0]-data[1])/np.pi
+          # A variable for detect if the objective is on tacking zone
+        beta = self.angle_saturation(ang = self.desired_heading - real_wind_angle, 
+                                     min_ang=-180, 
+                                     max_ang=180)
+        
+        to_tacking_zone_UW =  180-self.hyperparam[2]*0.5<alpha or 0.5*self.hyperparam[2]-180>alpha
+        obj_is_tacking_UW =  180-self.hyperparam[2]*0.5<beta or 0.5*self.hyperparam[2]-180>beta 
+        to_tacking_zone_TW =  alpha<self.hyperparam[4]/2 and alpha>-self.hyperparam[4]/2
+        obj_is_tacking_TW = beta<self.hyperparam[4]/2 and beta>-self.hyperparam[4]/2
+        
+        if  to_tacking_zone_UW and obj_is_tacking_UW:                   
+            self.refresh_tack_direction(heading_angle = actual_heading, 
+                                        real_wind = real_wind_angle,
+                                        tack_angle=-self.tack_direction*self.hyperparam[5],
+                                        phase = 180)
+            
+            self.desired_heading = self.angle_saturation(ang = -self.tack_direction*self.hyperparam[5]+real_wind_angle+180, 
+                                                         min_ang=-180, 
+                                                         max_ang=180)
+
+            self.tack = True
+        elif to_tacking_zone_TW and obj_is_tacking_TW:                   
+            self.refresh_tack_direction(heading_angle = actual_heading, 
+                                        real_wind = real_wind_angle,
+                                        tack_angle = self.tack_direction*self.hyperparam[13],
+                                        phase = 0)
+            self.desired_heading = self.angle_saturation(ang = self.tack_direction*self.hyperparam[13]+real_wind_angle, 
+                                                         min_ang=-180, 
+                                                         max_ang=180)
+            self.tack = True
+        else:
+            self.tack_angle_logic [0] = -1000
+            self.tack_angle_logic [1] = -1000
+            self.tack = False
+  
+       #delta_rmax,delta_smax,d_theta,theta,phi,sigma_awind,Vi_asterisc,epsilon
+        return [np.radians(self.desired_heading),np.radians(actual_heading),angle_speed, np.radians(angle_apparent)]

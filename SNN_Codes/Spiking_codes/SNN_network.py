@@ -94,6 +94,10 @@ class spiking_neuron:
         for i, l in enumerate(self.weigths_monitors):
             _weigths[i] = self.weigths_monitors[l].get("w")
         weigths_ims = plt.plot_weights(_weigths[len(_weigths)-1][1],im=im,wmin=self.min_weigth,wmax=self.max_weigth)
+        if self.is_rudder_controller:
+            plt.plt.savefig('Rudder_weigths.png')
+        else:
+            plt.plt.savefig('Sail_weigths.png')
         plt.plt.show()
         return weigths_ims
         
