@@ -26,15 +26,15 @@ class train_test_scenarios:
             band = True
             center = [0,0]
             self.min_distance = 2
-            if self.hyperparam[4] == 0:
-                self.hyperparam[2] = self.previous[0]
-                self.hyperparam[4] = self.previous[1]
+            self.hyperparam[2] = 90
+            self.hyperparam[4] = 30
+            self.hyperparam[5] = 45
             phi = 360/self.hyperparam[11]
             x = self.hyperparam[9]
             center[0] =  self.initial_point[0]-x
             center[1] =  self.initial_point[1]
             r = np.sqrt((self.initial_point[0]-center[0])**2+(self.initial_point[1]-center[1])**2)         
-            
+
             n = 2*self.hyperparam[11]
             theta = 0
             

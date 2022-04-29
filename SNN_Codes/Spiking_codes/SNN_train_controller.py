@@ -193,7 +193,8 @@ class SNN_complete_train_test:
         
                     
     def test_PI(self):
-        self.change_simulation_type(0)
+        self.change_simulation_type(1)
+        self.config_SNN_test()
         self.sail_env.set_database(db_name = 'TestPI', path = self.direction, 
                                    structure = ['state','wind','x','y','speed',
                                                 'heeling'])
@@ -201,10 +202,34 @@ class SNN_complete_train_test:
         while self.sail_env.state < len(self.sail_env.waypoints)-1:
             if not band:
                 band=self.p.open_port()
+            elif band != 2:
+                band = 2
+                self.p.write_control_action([0,0,0,1000])
             else:
                 self.sail_env.environment_PI_test(self.p)
         
         self.p.write_control_action([0,0,0,1000])
+        
+    def test_Viel2019(self):
+        self.change_simulation_type(1)
+        self.config_SNN_test()
+        self.sail_env.set_database(db_name = 'TestViel2019', path = self.direction, 
+                                   structure = ['state','wind','x','y','speed',
+                                                'heeling'])
+        band=False
+        while self.sail_env.state < len(self.sail_env.waypoints)-1:
+            if not band:
+                band=self.p.open_port()
+            elif band != 2:
+                band = 2
+                self.p.write_control_action([0,0,0,1000])
+            else:
+                data=self.p.read_data_sensor()
+                if not isinstance(data,bool):
+                    control_action = self.sail_env.environment_Viel2019_test(data = data)
+                    self.p.write_control_action(control_action)
+                else:
+                    print("No data")
                 
     def change_database_number(self, number):
         self.sail_env.file_number = number
