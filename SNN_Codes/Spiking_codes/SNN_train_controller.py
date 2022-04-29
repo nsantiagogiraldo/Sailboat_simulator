@@ -202,6 +202,9 @@ class SNN_complete_train_test:
         while self.sail_env.state < len(self.sail_env.waypoints)-1:
             if not band:
                 band=self.p.open_port()
+            elif band != 2:
+                band = 2
+                self.p.write_control_action([0,0,0,1000])
             else:
                 self.sail_env.environment_PI_test(self.p)
         

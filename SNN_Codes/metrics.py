@@ -323,7 +323,7 @@ path2 = '/home/nelson/Documentos/Ubuntu_master/SNN_Codes/config'
 images = ['graph_times.png','histogram_times.png','Test_obj_points.png','Error_graphs.png',
           'Histogram_errors.png','Reward_change.png', 'Test_curve.png', 'Train_curve.png',
           'Test_rudder_action.png', 'Test_sail_action.png', 'Train_obj_points.png']
-image = 12
+image = 10
 num_experiments = 1024
 choosen = 923
 train = 'Train_'+str(choosen)+'.csv'
