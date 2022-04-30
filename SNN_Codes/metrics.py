@@ -323,7 +323,7 @@ path2 = '/home/nelson/Documentos/Ubuntu_master/SNN_Codes/config'
 images = ['graph_times.png','histogram_times.png','Test_obj_points.png','Error_graphs.png',
           'Histogram_errors.png','Reward_change.png', 'Test_curve.png', 'Train_curve.png',
           'Test_rudder_action.png', 'Test_sail_action.png', 'Train_obj_points.png']
-image = 10
+image = 12
 num_experiments = 1024
 choosen = 923
 train = 'Train_'+str(choosen)+'.csv'
@@ -377,7 +377,7 @@ try:
         inf = [0,0,0,0]
         sup = [4,5,6,5]
         step = [14,14,14,14]
-        axisX = 'MAPE'
+        axisX = 'MAE'
         axisY = 'Number of experiments'
         title = ['Number of test experiments for each MAE (type 1)',
                  'Number of test experiments for each MAE (type 2)',
@@ -439,10 +439,13 @@ try:
         axisY = 'Y'
         title = 'Sailboat test curve' 
         x,y =  test_curve(path,test_choosen)
+        x2,y2 =  test_curve(path,'TestPI.csv')
+        x3,y3 =  test_curve(path,'TestViel2019.csv')
+        
         obj_points = environment_points(True)
         x1 = np.array(obj_points[0])
         y1 = np.array(obj_points[1])
-        config_plot([x,y], axisX, axisY, title, 'linear','Real test curve')
+        config_plot([x,y], axisX, axisY, title, 'linear','SNN test')
         plt.annotate('', xy=(215, 85), xytext=(210, 85),
              arrowprops=dict(facecolor='black', shrink=0.08),
              )
@@ -456,7 +459,9 @@ try:
                         )
         x = np.array(obj_points[0])
         y = np.array(obj_points[1])
-        plt.plot(x,y,'g',label = 'Ideal test curve')
+        plt.plot(x,y,'g',label = 'Ideal test')
+        plt.plot(x2,y2, label = 'USVsim test')
+        plt.plot(x3,y3,color  ='r', label = 'Viel test')
         plt.plot(x,y,'o',color='g')
         plt.legend()
         
@@ -499,8 +504,11 @@ try:
         y = np.array(obj_points[1])
         config_plot([x,y], axisX, axisY, title, 'linear_points2')
     elif image == 12:
-        print(error_data('TestViel2019.csv',path))
-        print(error_data('Test_923.csv',path))
+        print(np.mean(error_data('TestPI.csv',path)))
+        print(np.mean(error_data('TestViel2019.csv',path)))
+        print(np.mean(error_data('Test_'+str(choosen)+'.csv',path)))
+    # elif image == 13:
+
     if image <= 2:
         plt.savefig(images[image])
     elif image >= 6 and image !=12:
