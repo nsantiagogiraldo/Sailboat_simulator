@@ -1,6 +1,6 @@
 #!/bin/bash
 #Execute as root access
-cd /home/nsantiago
+cd /home/nsantiago #My workstation folder
 paralell=$((5))
 # Create a paralell containers. 
 for (( c=1; c<=$paralell; c++ ))

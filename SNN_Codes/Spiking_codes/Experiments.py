@@ -13,8 +13,8 @@ m = ctrl.SNN_complete_train_test()
 # m.test_Viel2019()
 # fail = False
 # m = ctrl.SNN_complete_train_test()
-# fail = m.train_SNN()
+fail = m.train_SNN()
 # del m
 # m = ctrl.SNN_complete_train_test()
 # if not fail:
-m.test_SNN()
+#m.test_SNN()
