@@ -9,7 +9,7 @@ class SNN_complete_train_test:
     ######################
     # Serial port
     port_name='interface_1'
-    direction = '/home/nelson/Documentos/Ubuntu_master/SNN_Codes/Spiking_codes'
+    direction = 'SNN_Codes/Spiking_codes'
     timeout=15
     p = sp.serial_port(direction, port_name, timeout)
     config_file = 'config.txt'

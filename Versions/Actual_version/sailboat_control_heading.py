@@ -41,6 +41,7 @@ constant = [2,3]
 state_msg = ''
 yaw_angles = [0,135,179,0] #Train yaw angles
 yaw_counter = 0
+path_read = ''
 
 def get_pose(initial_pose_tmp):
     global initial_pose 
@@ -140,9 +141,10 @@ def controller():
     global constant
     global db_name
     global yaw_counter
+    global path_read
 	
     port_name='interface_2'
-    direction= '/home/nelson/Documentos/Ubuntu_master/SNN_Codes/Spiking_codes'
+    direction= path_read+'/SNN_Codes/Spiking_codes'
     timeout=15
     rudder_angle=0
     sail_angle = 1
@@ -170,6 +172,8 @@ def controller():
     # Wind sensor processing and aconditionating
     x = rospy.get_param('/uwsim/wind/x')
     y = rospy.get_param('/uwsim/wind/y')
+    #x = 1
+    #y = 0
     global_dir = math.atan2(y,x)
     heeling = angle_saturation(math.degrees(global_dir)+180)
     wind_dir = global_dir + current_heading
@@ -226,6 +230,8 @@ def controller():
         result.data = int(result_py3)
         #############################################  
         #Timon y vela
+	#rospy.loginfo("Pos x: %f", x1)
+	#rospy.loginfo("Pos y: %f", y1)
         return math.radians(rudder_angle),math.radians(sail_angle),math.radians(sail_angle_2)
     
     else:
@@ -246,7 +252,11 @@ if __name__ == '__main__':
     global reset_world
     global control_rate
     global rate_value
+    global path_read
 
+    p = open('path_read.txt','r')
+    path_read = p.readline()
+    path_read = path_read[0:-1]
     #rospy.wait_for_service('/gazebo/reset_world')
     #reset_world = rospy.ServiceProxy('/gazebo/reset_world', Empty)
 
