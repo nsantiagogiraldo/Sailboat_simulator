@@ -22,3 +22,7 @@ pip install git+https://github.com/BindsNET/bindsnet.git
 git clone https://github.com/nsantiagogiraldo/Sailboat_simulator.git
 
 ```
+
+## Dataset
+
+Our dataset is available in this repository, in SNN_Codes/results/data.
